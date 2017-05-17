@@ -1,4 +1,5 @@
 #include "processo.h"
+#include "log.h"
 
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -12,8 +13,9 @@ Processo::Processo(int id, time_t tempo, std::string a){
 	arq = a.c_str();	
 }
 
-std::string Processo::Rodar(){
-	std::string log = "";
+Processo::~Processo(){ }
+
+void Processo::Rodar(){
 	status = Pstatus::RODANDO;
 
 	pid_t pid;
@@ -24,18 +26,15 @@ std::string Processo::Rodar(){
 	} else{
 		int status;
 		wait(&status);
-		log.append("\n");
-		log.append("" + id);
-		log.append("\t");
-		log.append(arq);
-		log.append("\t\t\t");
-		log.append("" + (int)(runtime / 60));
-		log.append(":");
-		log.append("" + (int)(runtime % 60));
-		log.append("\n");
+		std::string aux = "";
+		aux.append("\n" + id);
+		aux.append("\t" + arq + "\t\t\t");
+		aux.append("" + (int)(runtime / 60));
+		aux.append(":" + (int)(runtime % 60));
+		aux.append("\n");
+		Log::appendText(aux);
 		status = Pstatus::MORTO;
 	}
-	return log;
 }
 
 void Processo::SetStatus(Pstatus::tipo s){

@@ -6,7 +6,6 @@
 #include <sys/types.h>
 #include <vector>
 #include <queue>
-#include <sstream>
 
 struct mensagem {
 	long tipo;
@@ -19,7 +18,6 @@ struct mensagem {
 int job_id, msgqid;
 std::vector<Processo> proc_scheduled;
 std::queue<Processo> proc_running;
-std::ostringstream log;
 
 int obterHorarioAtual();
 void criarFila(key_t msgkey);

@@ -1,4 +1,5 @@
 #include "escalonador.h"
+#include "log.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,11 +12,6 @@
 #include <unistd.h>
 #include <time.h>
 
-//#include <sys/ipc.h>
-//#include <signal.h>
-//#include <map>
-//#include <sstream>
-
 int obterHorarioAtual(){
 	time_t t = time(NULL);
 	struct tm *horario = localtime(&t);
@@ -25,18 +21,19 @@ int obterHorarioAtual(){
 void criarFila(key_t msgkey){
 	// Cria a fila de mensagens 0x1B6, 0666 = 0x29A
 	if((msgqid = msgget(msgkey, IPC_CREAT | 0x1B6)) < 0){
-        perror("Erro ao executar msgget: ");
-        exit(1);
+		perror("Erro ao executar msgget: ");
+		exit(1);
     }
 }
 
 void shutdown(int sig){
-	std::cout << "\nDESLIGANDO SERVIDOR...\nESSES PROCESSOS NAO SERAO EXECUTADOS: ";
+	std::cout << "\nServidor deligando...\n\nProcessos que não serão executados: ";
 	listaProcessos();
-	std::cout << "\nESSES PROCESSOS FORAM EXECUTADOS: \n" << log.str();
+	std::cout << "\nProcessos que foram executados: \n";
+	Log::printText();
 	msgctl(msgqid, IPC_RMID, NULL);
 	// Pode ter que dar kill nos processos e wait
-	exit(0);
+	exit(0); //exit(1);
 }
 
 void listaProcessos(){
@@ -51,8 +48,7 @@ void listaProcessos(){
 
 void rodaProcessos(){
 	if(!proc_running.empty()){
-		std::string aux = proc_running.front().Rodar();
-		log << aux;
+		proc_running.front().Rodar();
 		proc_running.pop();
 	}
 }
@@ -91,7 +87,7 @@ void checaEscalonador(){
 void executaEscalonador(){
 	signal(SIGTERM, shutdown);
 
-	log << "job\tarq_exec\thhmm";
+	Log::appendText(std::string("job\tarq_exec\thhmm"));
 	job_id = 0;
 	key_t msgkey = 0x14002713;
 	criarFila(msgkey);
@@ -127,7 +123,8 @@ void executaEscalonador(){
 // TODO: Ver a necessidade de adicionar semáfora para partes críticas
 // TODO: Ver melhor como se encaixa o fat tree
 // TODO: Ver melhor questão das estruturas de dados, se há outras pra adicionar
+// TODO: Rever uso do execv
 int main(){
 	executaEscalonador();
-	return 0;
+	return 0; //exit(0);
 }

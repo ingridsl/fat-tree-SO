@@ -11,7 +11,8 @@ namespace Pstatus {
 class Processo {
 public:
 	Processo(int id, time_t tempo, std::string a);
-	std::string Rodar();
+	~Processo();
+	void Rodar();
 	void SetStatus(Pstatus::tipo s);
 	int GetId();
 	bool ConfirmaId(int id);
