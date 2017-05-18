@@ -16,7 +16,7 @@ public:
 	int GetId();
 	bool ConfirmaId(int id);
 	std::string GetArq();
-	int GetRuntime();
+	time_t GetRuntime();
 private:
 	Pstatus::tipo status;
 	std::string arq;

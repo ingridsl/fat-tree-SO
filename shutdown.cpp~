@@ -3,9 +3,6 @@
 #include <sys/msg.h>
 #include <signal.h>
 
-
-#include "estrutura.h"
-
 int main(){
 	key_t msgkey = 0x14002713;
 	int msgqid;

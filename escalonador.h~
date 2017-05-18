@@ -28,7 +28,7 @@ void listaProcessos();
 void rodaProcessos();
 void removeProcesso(int id);
 
-void adicionaEscalonador(int job, char* arq, int offset, int times);
+void adicionaEscalonador(char* arq, int offset, int times);
 void checaEscalonador();
 void executaEscalonador();
 

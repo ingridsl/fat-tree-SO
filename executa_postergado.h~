@@ -9,7 +9,7 @@
 
 #define N 200
 
-/*struct mensagem {
+struct mensagem {
 	long tipo;
 	int job;
 	char arq[N];
@@ -20,7 +20,7 @@ struct job{
 	long tipo;
 	int job;
 
-};*/
+};
 
 int job_id, msgqid;
 void checaQuantidade(int quantidade);

@@ -13,6 +13,8 @@
 #include <unistd.h>
 #include <time.h>
 
+#include "estrutura.h"
+
 
 using namespace std;
 
@@ -83,7 +85,8 @@ void executaPostergado(int seg, char arq_executavel[N]){
 	struct mensagem msg;
 
 	//Define o tipo
-	msg.tipo = 1;
+	msg.tipo = 4;
+	msg.times = 1;
 	//define o identificador unico do job
 	msg.job = encontraUltimoJob();
 
@@ -97,16 +100,17 @@ void executaPostergado(int seg, char arq_executavel[N]){
 
 	//enviar o novo job inserido pelo usuário para tratamento
 	int msgsize = sizeof(struct mensagem) - sizeof(long);
-	printf("\njob %d, arquivo %s, delay= %d segundos", msg.job, msg.arq, msg.offset);
-    /*if(msgsnd(msgqid , &mensagem, sizeof(msgsize), 0) < 0){
-		printf("Problema ao enviar as info do novo job\n");
-	}*/
+	printf("\njob = %d, arquivo = %s, delay = %d segundos", msg.job, msg.arq, msg.offset);
+    	if(msgsnd(msgqid , &msg, msgsize, 2) < 0){
 
-	time_t start = time(NULL);
+		printf("Problema ao enviar as info do novo job\n");
+	}
+
+	/*time_t start = time(NULL);
 
 	while(1) 
 		if(difftime(start, time(NULL))*(-1) == seg)
-			break;
+			break;*/
 
 	printf("\nInicio da execucao apos %d segundos\n", seg);
 	/*A partir daqui o processo escalonador de execução solicita que todos os processos gerentes de execução executem o programa <arq_executavel>, marcando-os como ocupados*/

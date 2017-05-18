@@ -53,7 +53,7 @@ void listaProcessos(){
 
 void rodaProcessos(){
 	if(!proc_running.empty()){
-		printf("\nAQUI2");
+		printf("AQUI2");
 		proc_running.front().Rodar();
 		proc_running.pop();
 	}
