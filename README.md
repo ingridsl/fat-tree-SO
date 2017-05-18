@@ -14,7 +14,7 @@ executa postergado:
 
 	g++ executa_postergado.cpp -o executa_postergado
 
-	./executa_postergado 5 hello_world.c
+	./executa_postergado 5 hello_world
 
 	- Depois de escalonador ter sido executado com sucesso
 	
