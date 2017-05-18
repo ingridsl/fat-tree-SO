@@ -7,15 +7,9 @@
 #include <vector>
 #include <queue>
 
-/*struct mensagem {
-	long tipo;
-	char arq[200];
-	int offset;
-	int times;
-};*/
-
-
 int job_id, msgqid;
+pid_t pid_filho[16]; // 15 ou 16
+int n_pid = 0; // coloquei só pra auxiliar enquanto não tem o fat tree
 std::vector<Processo> proc_scheduled;
 std::queue<Processo> proc_running;
 

@@ -2,25 +2,11 @@
 #define EXECUTA_POSTERGADO_H
 
 //#include "processo.h"
+#include "estrutura.h"
 
 #include <sys/types.h>
 #include <vector>
 #include <queue>
-
-#define N 200
-
-/*struct mensagem {
-	long tipo;
-	int job;
-	char arq[N];
-	int offset;
-	int times;
-};
-struct job{
-	long tipo;
-	int job;
-
-};*/
 
 int job_id, msgqid;
 void checaQuantidade(int quantidade);

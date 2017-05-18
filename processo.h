@@ -1,6 +1,7 @@
 #ifndef PROCESSO_H
 #define PROCESSO_H
 
+#include <sys/types.h>
 #include <string>
 
 namespace Pstatus {
@@ -11,10 +12,9 @@ class Processo {
 public:
 	Processo(int id, int tempo, std::string a);
 	~Processo();
-	void Rodar();
+	pid_t Rodar();
 	void SetStatus(Pstatus::tipo s);
 	int GetId();
-	bool ConfirmaId(int id);
 	std::string GetArq();
 	int GetRuntime();
 private:

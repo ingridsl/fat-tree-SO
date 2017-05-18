@@ -15,18 +15,14 @@ int main(){
 	}
 
 	// envia mensagem do tipo 1, que ativa flag no escalonador
-	struct mensagem {
-		long tipo;
-		char dummy;
-	};
-	struct mensagem msg = { 1, ' ' };
+	struct mensagem msg = { 1, 0, ' ', 0, 0 };
 	int msg_tam = sizeof(struct mensagem) - sizeof(long);
 
     if(msgsnd(msgqid, &msg, msg_tam, 2) < 0){
     	perror("Erro ao executar msgsnd: ");
     }
 
-    // Podemos ver para implementar com kill
+    // TODO: implementar através do kill
     //kill(msgqid, SIGTERM);
 	
 	return 0; //exit(0);

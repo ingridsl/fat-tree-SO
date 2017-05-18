@@ -10,10 +10,10 @@ struct mensagem {
 	int offset; // segundos da postergacao
 	int times; // ? numero de vezes que se pretende chamar o processo
 };
-struct job{
+
+struct job {
 	long tipo;
 	int job;
-
 };
 
 #endif

@@ -1,6 +1,5 @@
 #include "executa_postergado.h"
 
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
@@ -12,8 +11,6 @@
 
 #include <unistd.h>
 #include <time.h>
-
-#include "estrutura.h"
 
 
 using namespace std;
@@ -106,6 +103,7 @@ void executaPostergado(int seg, char arq_executavel[N]){
 		printf("Problema ao enviar as info do novo job\n");
 	}
 
+	// Essa parte já está implementada pelo escalonador
 	/*time_t start = time(NULL);
 
 	while(1) 

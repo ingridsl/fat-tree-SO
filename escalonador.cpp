@@ -32,45 +32,56 @@ void shutdown(int sig){
 	listaProcessos();
 	std::cout << "\nProcessos que foram executados: \n";
 	Log::printText();
+
 	msgctl(msgqid, IPC_RMID, NULL);
+
 	// Pode ter que dar kill nos processos e wait
+	for (int i = 0; i < n_pid /*16*/; i++)
+       kill(pid_filho[i], SIGKILL);
+	int status;
+	while(wait(&status) != -1);
+
 	exit(0); //exit(1);
 }
 
 void listaProcessos(){
-	std::cout << "\njob\tarq_exec\thh:mm:ss" << std::endl;
+	std::cout << "\njob\tarq_exec\t\thh:mm:ss" << std::endl;
 
 	std::vector<Processo>::iterator it = proc_scheduled.begin();
 	for( ; it != proc_scheduled.end(); it++){
+		// Com as variaveis do processo senfo privadas nao consegue acessar as funcoes de get por causa do wait
 		int runtime = it->GetRuntime();
 		int hora = (runtime / (60*60));
-		int minuto = (runtime - (hora*60*60)/60);
+		int minuto = ((runtime - (hora*60*60))/60);
 		int segundo = (runtime - hora*60*60 - minuto*60);
-		std::cout << it->GetId() << "\t" << it->GetArq() << 
-			"\t" << hora << ":" << minuto << ":" << segundo << std::endl;
+		printf("%d\t%s\t\t%d:%d:%d\n", it->GetId(), it->GetArq().c_str(), hora, minuto, segundo);
 	}
 }
 
 void rodaProcessos(){
 	if(!proc_running.empty()){
-		printf("\nAQUI2");
-		proc_running.front().Rodar();
+		//printf("\nAQUI2");
+		pid_t pid = proc_running.front().Rodar();
+		pid_filho[n_pid++] = pid;
+		//printf("\nPID_FILHO: %d", pid);
 		proc_running.pop();
 	}
 }
 
 void removeProcesso(int id){
-	std::vector<Processo>::iterator it = proc_scheduled.begin();
-	for( ; it != proc_scheduled.end(); ){
-		if(it->GetId() == id){
-			it = proc_scheduled.erase(it);
-		} else it++;
+	if(!proc_scheduled.empty()){
+		std::vector<Processo>::iterator it = proc_scheduled.begin();
+		for( ; it != proc_scheduled.end(); ){
+			if(it->GetId() == id){
+				it = proc_scheduled.erase(it);
+			} else it++;
+		}
 	}
 }
 
 void adicionaEscalonador(int job, char* arq, int offset, int times){
-	std::cout << "\nJOB ID" << job_id << ": PROCESSO " << arq << " COM OFFSET DE " << 
-		offset << " MINUTOS E EXECUTANDO " << times << " VEZES" << std::endl;
+	std::cout << "\njob_id = " << job_id << ": " << arq << " com offset de " << 
+		offset << " segundo(s) e executando " << times << " vez(es)" << std::endl;
 	int horarioAtual = obterHorarioAtual();
 	for(int i = 1; i <= times; ++i){
 		proc_scheduled.push_back(Processo(job_id, horarioAtual + i*offset, arq));
@@ -79,18 +90,20 @@ void adicionaEscalonador(int job, char* arq, int offset, int times){
 }
 
 void checaEscalonador(){
-	int horarioAtual = obterHorarioAtual();
-	std::vector<Processo>::iterator it = proc_scheduled.begin();
-	for( ; it != proc_scheduled.end(); ){
-		//printf("\n(%d <= %d)", it->GetRuntime(), horarioAtual);
-		if(it->GetRuntime() <= horarioAtual){
-			//printf("\nAQUI");
-			it->SetStatus(Pstatus::DORMINDO);
-			proc_running.push(*it);
-			it = proc_scheduled.erase(it);
-		} else {
-			it++;
-			//printf("THERE");
+	if(!proc_scheduled.empty()){
+		int horarioAtual = obterHorarioAtual();
+		std::vector<Processo>::iterator it = proc_scheduled.begin();
+		for( ; it != proc_scheduled.end(); ){
+			//printf("\n(%d <= %d)", it->GetRuntime(), horarioAtual);
+			if(it->GetRuntime() <= horarioAtual){
+				//printf("\nAQUI");
+				it->SetStatus(Pstatus::DORMINDO);
+				proc_running.push(*it);
+				it = proc_scheduled.erase(it);
+			} else {
+				it++;
+				//printf("THERE");
+			}
 		}
 	}
 }
@@ -98,7 +111,7 @@ void checaEscalonador(){
 void executaEscalonador(){
 	signal(SIGTERM, shutdown);
 
-	Log::appendText(std::string("job\tarq_exec\thh:mm:ss"));
+	Log::appendText(std::string("job\tarq_exec\t\thh:mm:ss"));
 	job_id = 0;
 	key_t msgkey = 0x14002713;
 	criarFila(msgkey);
@@ -108,8 +121,6 @@ void executaEscalonador(){
 	while(true){
 
 		if(msgrcv(msgqid, &msg, msgsize, -4, IPC_NOWAIT) != -1){
-		//std::cout << "\nYWYWY JOB ID" << msg.job << ": PROCESSO " << msg.arq << " COM OFFSET DE " << 
-		//msg.offset << " MINUTOS E EXECUTANDO " << msg.times << " VEZES | " << msg.tipo << std::endl;
 			switch(msg.tipo){
 				case 1:
 					raise(SIGTERM);
@@ -128,7 +139,7 @@ void executaEscalonador(){
 
 		checaEscalonador();
 		rodaProcessos();
-		sleep(1);
+		//sleep(1);
 
 	}
 }
@@ -136,7 +147,6 @@ void executaEscalonador(){
 // TODO: Ver a necessidade de adicionar semáfora para partes críticas
 // TODO: Ver melhor como se encaixa o fat tree
 // TODO: Ver melhor questão das estruturas de dados, se há outras pra adicionar
-// TODO: Rever uso do execv
 int main(){
 	executaEscalonador();
 	return 0; //exit(0);
