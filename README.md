@@ -10,6 +10,7 @@ escalonador:
 	- Irá mostrar o id e o pid
 	- Para ver todos abertos: ps -l
 	- Para remover algum: kill [pid]
+	
 executa postergado:
 
 	g++ executa_postergado.cpp -o executa_postergado
@@ -17,6 +18,9 @@ executa postergado:
 	./executa_postergado 5 hello_world
 
 	- Depois de escalonador ter sido executado com sucesso
+
+gerente:
+	g++ gerente.cpp -o gerente
 	
 shutdown:
 	g++ shutdown.cpp -o shutdown
