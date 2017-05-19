@@ -22,7 +22,7 @@ int obterHorarioAtual(){
 void criarFila(key_t msgkey){
 	// Cria a fila de mensagens 0x1B6, 0666 = 0x29A
 	if((msgqid = msgget(msgkey, IPC_CREAT | 0x1B6)) < 0){
-		perror("Erro ao executar msgget: ");
+		printf("Erro na criação da fila a partir do msgget");
 		exit(1);
     }
 }
@@ -36,8 +36,8 @@ void shutdown(int sig){
 	msgctl(msgqid, IPC_RMID, NULL);
 
 	// Pode ter que dar kill nos processos e wait
-	for (int i = 0; i < n_pid /*16*/; i++)
-       kill(pid_filho[i], SIGKILL);
+	//for (int i = 0; i < n_pid /*16*/; i++)
+    //   kill(pid_filho[i], SIGKILL);
 	int status;
 	while(wait(&status) != -1);
 
@@ -62,7 +62,7 @@ void rodaProcessos(){
 	if(!proc_running.empty()){
 		//printf("\nAQUI2");
 		pid_t pid = proc_running.front().Rodar();
-		pid_filho[n_pid++] = pid;
+		//pid_filho[n_pid++] = pid;
 		//printf("\nPID_FILHO: %d", pid);
 		proc_running.pop();
 	}
@@ -108,6 +108,143 @@ void checaEscalonador(){
 	}
 }
 
+void criarGerenteProcessos(key_t msgkey){
+	int pid_filho_aux[2];
+	char parametro1[10];
+	char parametro2[10];
+	char parametronivel[1];
+	int nivel1 = 1, nivel2 = 2, nivel3 = 3, nivel4 = 4;
+
+
+	if((pid_filho = fork()) < 0 ){ /*GERENTE 1 NIVEL 1*/
+		printf("Erro na criação de árvore a partir do Fork()\n"); exit(1); }
+	if(pid_filho == 0){ 
+
+		if((pid_filho_aux[0] = fork()) < 0 ){ 
+			printf("Erro na criação de árvore a partir do Fork()\n"); exit(1); }
+		if(pid_filho_aux[0] == 0){ /* GERENTE 1 NIVEL 2*/
+			if((pid_filho_aux[0] = fork()) < 0){ 
+				printf("Erro na criação de árvore a partir do Fork()\n"); exit(1); }
+
+			if(pid_filho_aux[0] == 0){ /* GERENTE 1 NIVEL 3*/
+
+				if((pid_filho_aux[0] = fork()) < 0){ 
+					printf("Erro na criação de árvore a partir do Fork()\n"); exit(1); }
+				if(pid_filho_aux[0] == 0){ /* GERENTE 1 NIVEL 4*/
+					parametronivel[0] = nivel4 + '0';
+					execl("gerente", "gerente", parametronivel,  (char*) NULL);
+				}
+				if((pid_filho_aux[1] = fork()) < 0){ 
+					printf("Erro na criação de árvore a partir do Fork()\n"); exit(1); }
+				if(pid_filho_aux[1] == 0){ /* GERENTE 2 NIVEL 4*/
+					parametronivel[0] = nivel4 + '0';
+					execl("gerente", "gerente", parametronivel, (char*) NULL);
+				}
+
+				//GERENTE 1-3
+				parametronivel[0] = nivel3 + '0';
+				sprintf (parametro1, "%d", pid_filho_aux[0]);
+				sprintf (parametro2, "%d", pid_filho_aux[1]);
+				execl("gerente", "gerente", parametronivel, parametro1, parametro2, (char*) NULL);
+			}
+			if((pid_filho_aux[1] = fork()) < 0){ 
+				printf("Erro na criação de árvore a partir do Fork()\n"); exit(1); }
+
+			if(pid_filho_aux[1] == 0){ /* GERENTE 2 NIVEL 3*/
+
+				if((pid_filho_aux[0] = fork()) < 0){ 
+					printf("Erro na criação de árvore a partir do Fork()\n"); exit(1); }
+				if(pid_filho_aux[0] == 0){ /* GERENTE 3 NIVEL 4*/
+					parametronivel[0] = nivel4 + '0';
+					execl("gerente", "gerente", parametronivel, (char*) NULL);
+				}
+				if((pid_filho_aux[1] = fork()) < 0){ 
+					printf("Erro na criação de árvore a partir do Fork()\n"); exit(1); }
+				if(pid_filho_aux[1] == 0){ /* GERENTE 4 NIVEL 4*/	
+					parametronivel[0] = nivel4 + '0';
+					execl("gerente", "gerente", parametronivel, (char*) NULL);
+				}
+				//GERENTE 2-3
+				parametronivel[0] = nivel3 + '0';
+				sprintf (parametro1, "%d", pid_filho_aux[0]);
+				sprintf (parametro2, "%d", pid_filho_aux[1]);
+				execl("gerente", "gerente", parametronivel, parametro1, parametro2, (char*) NULL);			
+			}
+
+			//Gerente 1-2
+			parametronivel[0] = nivel2 + '0';
+			sprintf (parametro1, "%d", pid_filho_aux[0]);
+			sprintf (parametro2, "%d", pid_filho_aux[1]);
+			execl("gerente", "gerente", parametronivel, parametro1, parametro2, (char*) NULL);
+		}
+		if((pid_filho_aux[1] = fork()) < 0 ){
+			printf("Erro na criação de árvore a partir do Fork()\n"); exit(1); }
+		if(pid_filho_aux[1] == 0){ /* GERENTE 2 NIVEL 2*/
+			if((pid_filho_aux[0] = fork()) < 0){ /* GERENTE 3 NIVEL 3*/
+				printf("Erro na criação de árvore a partir do Fork()\n"); exit(1); }
+
+			if(pid_filho_aux[0] == 0){
+
+				if((pid_filho_aux[0] = fork()) < 0){ 
+					printf("Erro na criação de árvore a partir do Fork()\n"); exit(1); }
+				if(pid_filho_aux[0] == 0){ /* GERENTE 5 NIVEL 4*/
+					parametronivel[0] = nivel4 + '0';
+					execl("gerente", "gerente", parametronivel, (char*) NULL);
+				}
+				if((pid_filho_aux[1] = fork()) < 0){ 
+					printf("Erro na criação de árvore a partir do Fork()\n"); exit(1); }
+				if(pid_filho_aux[1] == 0){ /* GERENTE 6 NIVEL 4*/
+					parametronivel[0] = nivel4 + '0';
+					execl("gerente", "gerente", parametronivel, (char*) NULL);
+				}
+
+				//GERENTE 3-3
+				parametronivel[0] = nivel3 + '0';
+				sprintf (parametro1, "%d", pid_filho_aux[0]);
+				sprintf (parametro2, "%d", pid_filho_aux[1]);
+				execl("gerente", "gerente", parametronivel, parametro1, parametro2, (char*) NULL);
+			}
+
+			if((pid_filho_aux[1] = fork()) < 0){ /* GERENTE 4 NIVEL 3*/
+				printf("Erro na criação de árvore a partir do Fork()\n"); exit(1); }
+
+			if(pid_filho_aux[1] == 0){
+				
+				if((pid_filho_aux[0] = fork()) < 0){ 
+					printf("Erro na criação de árvore a partir do Fork()\n"); exit(1); }
+				if(pid_filho_aux[0] == 0){ /* GERENTE 7 NIVEL 4*/
+					parametronivel[0] = nivel4 + '0';
+					execl("gerente", "gerente", parametronivel, (char*) NULL);
+				}
+				if((pid_filho_aux[1] = fork()) < 0){ 
+					printf("Erro na criação de árvore a partir do Fork()\n"); exit(1); }
+				if(pid_filho_aux[1] == 0){ /* GERENTE 8 NIVEL 4*/
+					parametronivel[0] = nivel4 + '0';
+					execl("gerente", "gerente", parametronivel, (char*) NULL);
+				}
+				//GERENTE 4-3
+
+				parametronivel[0] = nivel3 + '0';
+				sprintf (parametro1, "%d", pid_filho_aux[0]);
+				sprintf (parametro2, "%d", pid_filho_aux[1]);
+				execl("gerente", "gerente", parametronivel, parametro1, parametro2, (char*) NULL);
+			}
+
+			//Gerente 2-2
+			parametronivel[0] = nivel2 + '0';
+			sprintf (parametro1, "%d", pid_filho_aux[0]);
+			sprintf (parametro2, "%d", pid_filho_aux[1]);
+			execl("gerente", "gerente", parametronivel, parametro1, parametro2, (char*) NULL);
+		}
+
+		parametronivel[0] = nivel1 + '0';
+		sprintf (parametro1, "%d", pid_filho_aux[0]);
+		sprintf (parametro2, "%d", pid_filho_aux[1]);
+		execl("gerente", "gerente", parametronivel, parametro1, parametro2, (char*) NULL);
+	}
+}
+
+
 void executaEscalonador(){
 	signal(SIGTERM, shutdown);
 
@@ -115,6 +252,8 @@ void executaEscalonador(){
 	job_id = 0;
 	key_t msgkey = 0x14002713;
 	criarFila(msgkey);
+
+	criarGerenteProcessos(msgkey);
 
 	struct mensagem msg;
 	int msgsize = sizeof(struct mensagem) - sizeof(long);

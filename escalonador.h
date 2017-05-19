@@ -7,9 +7,9 @@
 #include <vector>
 #include <queue>
 
-int job_id, msgqid;
-pid_t pid_filho[16]; // 15 ou 16
+int job_id, msgqid;// 15 ou 16
 int n_pid = 0; // coloquei só pra auxiliar enquanto não tem o fat tree
+int pid_filho;
 std::vector<Processo> proc_scheduled;
 std::queue<Processo> proc_running;
 
