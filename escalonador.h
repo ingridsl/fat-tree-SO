@@ -8,7 +8,6 @@
 #include <queue>
 
 int job_id, msgqid_recebimento, msgqid_envio;// 15 ou 16
-int n_pid = 0; // coloquei só pra auxiliar enquanto não tem o fat tree
 int pid_filho;
 
 std::vector<struct exec> execucoes_pendentes;
@@ -18,11 +17,7 @@ int obterHorarioAtual();
 
 void shutdown(int sig);
 
-void listaProcessos();
-void rodaProcessos();
-void removeProcesso(int id);
-
-void adicionaEscalonador(int job, char* arq, int offset);
+void adicionaExecucaoPostergada(struct mensagem recebido);
 void checaEscalonador();
 void executaEscalonador();
 void criarGerentes();

@@ -17,14 +17,4 @@ int encontraUltimoJob();
 void executaPostergado(int seg, char arq_executavel[N]);
 
 void executaPostergado();
-//void shutdown(int sig);
-
-//void listaProcessos();
-//void rodaProcessos();
-//void removeProcesso(int id);
-
-//void adicionaEscalonador(char* arq, int offset, int times);
-//void checaEscalonador();
-//void executaEscalonador();
-
 #endif

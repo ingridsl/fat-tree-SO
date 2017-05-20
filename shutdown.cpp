@@ -9,21 +9,20 @@ int main(){
 	key_t msgkey = 0x14002713;
 	int msgqid;
 	if((msgqid = msgget(msgkey, 0x1B6)) < 0){
-		printf("Erro ao executar msgget");
+		printf("Erro ao executar msggeta");
 		exit(1);
 	}
 
 	key_t msgkey_job = 0x14002000;
 	int msgqidjob;
-	if((msgqidjob = msgget(msgkey_job, 0x1B6)) < 0){
-		printf("Erro ao executar msgget");
-		exit(1);
+	if((msgqidjob = msgget(msgkey_job, 0x1B6)) > 0){
+		msgctl(msgqidjob, IPC_RMID, NULL);
 	}
-	msgctl(msgqidjob, IPC_RMID, NULL);
+	
 
 	struct mensagem msg = { 50, 0, ' ', 0, 0 };
 	int msg_tam = sizeof(struct mensagem) - sizeof(long);
-    if(msgsnd(msgqid, &msg, msg_tam, 2) < 0){
+    if(msgsnd(msgqid, &msg, msg_tam, 0) < 0){
     	printf("Erro ao executar msgsnd: ");
     	exit(1);
     }
