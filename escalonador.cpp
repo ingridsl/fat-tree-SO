@@ -7,7 +7,6 @@
 #include <sys/wait.h>
 #include <sys/types.h>
 #include <vector>
-#include <queue>
 
 #include <unistd.h>
 #include <time.h>
@@ -18,7 +17,7 @@ int pid_filho;
 int cont_termino;
 
 std::vector<struct exec> execucoes_pendentes;
-std::queue<struct exec> execucoes_terminadas;
+std::vector<struct exec> execucoes_terminadas;
 
 int obterHorarioAtual(){
 	time_t t = time(NULL);
@@ -201,6 +200,19 @@ void criarGerentes(){
 	}
 }
 
+void imprimeConcluido(struct exec finalizado){
+	int hora_ini = (finalizado.tempo_inicio / (60*60));
+	int minuto_ini = ((finalizado.tempo_inicio - (hora_ini*60*60))/60);
+	int segundo_ini = (finalizado.tempo_inicio - hora_ini*60*60 - minuto_ini*60);
+	int hora_fim = (finalizado.tempo_termino / (60*60));
+	int minuto_fim = ((finalizado.tempo_termino - (hora_fim*60*60))/60);
+	int segundo_fim = (finalizado.tempo_termino - hora_fim*60*60 - minuto_fim*60);
+	printf("\nJob: %d terminado, arquivo: %s, inicio de execucao as %dh%dm%ds e fim %dh%dm%ds, com turnaround de: %d\n",
+		finalizado.job, finalizado.arq, hora_ini,minuto_ini,segundo_ini,
+		hora_fim,minuto_fim,segundo_fim, finalizado.tempo_termino - 
+		finalizado.tempo_inicio);
+}
+
 void imprimeRestante(){
 	if(!execucoes_pendentes.empty()){
 		printf("\nExecucoes que ficaram pendentes:\n");
@@ -212,17 +224,16 @@ void imprimeRestante(){
 	execucoes_pendentes.clear();
 }
 
-void imprimeConcluido(struct exec finalizado){
-	int hora_ini = (finalizado.tempo_inicio / (60*60));
-	int minuto_ini = ((finalizado.tempo_inicio - (hora_ini*60*60))/60);
-	int segundo_ini = (finalizado.tempo_inicio - hora_ini*60*60 - minuto_ini*60);
-	int hora_fim = (finalizado.tempo_termino / (60*60));
-	int minuto_fim = ((finalizado.tempo_termino - (hora_fim*60*60))/60);
-	int segundo_fim = (finalizado.tempo_termino - hora_fim*60*60 - minuto_fim*60);
-	printf("\n\nJob %d terminado, arquivo: %s, inicio de execucao as %dh%dm%ds e fim %dh%dm%ds, com turnaround de: %d\n",
-		finalizado.job, finalizado.arq, hora_ini,minuto_ini,segundo_ini,
-		hora_fim,minuto_fim,segundo_fim, finalizado.tempo_termino - 
-		finalizado.tempo_inicio);
+void imprimeExecutados(){
+
+	if(!execucoes_terminadas.empty()){
+		printf("\nExecucoes com exito:");
+		for(std::vector<int>::size_type i = 0; i != execucoes_terminadas.size(); i++) {
+   			imprimeConcluido(execucoes_terminadas[i]);
+		}
+	}
+	execucoes_terminadas.clear();
+
 }
 
 void shutdown(int sig){
@@ -233,6 +244,7 @@ void shutdown(int sig){
 	wait(&status);
 
 	imprimeRestante();
+	imprimeExecutados();
 
 	msgctl(msgqid_up, IPC_RMID, NULL);
 	msgctl(msgqid_down, IPC_RMID, NULL);
@@ -283,7 +295,7 @@ void executaEscalonador(){
 			if(cont_termino == 15){
 				finalizado.tempo_termino = obterHorarioAtual();
 				cont_termino = 0;
-				execucoes_terminadas.push(finalizado);
+				execucoes_terminadas.push_back(finalizado);
 
 				finalizado = execucoes_terminadas.back();
 				imprimeConcluido(finalizado);	
