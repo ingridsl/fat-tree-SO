@@ -8,7 +8,7 @@
 #include <vector>
 #include <queue>
 
-int job_id, msgqid;
+int job_id, msgqid, msgqidjob;
 void checaQuantidade(int quantidade);
 int numOk(const char * seg);
 int arquivoOK(char * arqExe);

@@ -8,7 +8,6 @@ struct mensagem {
 	int job; // ?
 	char arq[N]; // nome do arquivo
 	int offset; // segundos da postergacao
-	int times; // ? numero de vezes que se pretende chamar o processo
 };
 
 struct job {

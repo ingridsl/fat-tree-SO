@@ -14,4 +14,4 @@ shutdown: shutdown.cpp
 	g++ shutdown.cpp -o shutdown
 
 clean: 
-	rm *o fat_tree
+	rm -f escalonador executa_postergado gerente shutdown *.o

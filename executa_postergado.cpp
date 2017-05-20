@@ -42,76 +42,57 @@ int arquivoOK(char * arqExe){
 	}
 }
 
-int verificaFila(key_t msgkey){
-	if(msgget(msgkey, 0x1B6) < 0){
-		printf("ERRO >> Nenhuma fila encontrada \n");
-		exit(1);
-	}
-
-	msgqid = msgget(msgkey, 0x1B6);
-	return msgqid;
-}
-
-
 int encontraUltimoJob(){
-	struct job previousJob;
-	previousJob.job = 1;
-	int num_aux = 0;
-	int msgqid;
+	struct job msgjobrcv;
+	struct job msgjobsnd;
+	int jobaux;
+	int jobsize = sizeof(struct job) - sizeof(long);
 
-	//Verifica a existencia de filas 
-	msgqid = verificaFila(0x14002713);
-
+	msgjobsnd.tipo = 0;
 	//Recebe o ultimo job
-	if (msgrcv(msgqid, &previousJob, sizeof(previousJob), 0, IPC_NOWAIT) < 0){
-		//printf("ERRO >> Nenhum numero de job encontrado na fila\n");
-		//exit(1);
-		return 1;
-	}
-   	num_aux = previousJob.job;
+	if (msgrcv(msgqidjob, &msgjobrcv, jobsize, 0, IPC_NOWAIT) < 0){
+		jobaux = msgjobsnd.job = 1;
+		if(msgsnd(msgqidjob , &msgjobsnd, jobsize, 0) < 0)
+			perror(":");
+	}else{
+		jobaux = msgjobrcv.job;
+		msgjobsnd.job = jobaux + 1;
 
-   	return num_aux;
+		if(msgsnd(msgqidjob , &msgjobsnd, jobsize, 0) < 0)
+			printf("Problema ao enviar numero unico de tupla2\n");
+	}
+
+   	return jobaux;
 }
 
 
 void executaPostergado(int seg, char arq_executavel[N]){
-
-	// checagem de quantidade de parametros
-
-	int msgqid;
 	struct mensagem msg;
+	
 
-	//Define o tipo
-	msg.tipo = 4;
-	msg.times = 1;
-	//define o identificador unico do job
-	msg.job = encontraUltimoJob();
+	key_t msgkey_job = 0x14002000;
+	if((msgqidjob = msgget(msgkey_job, IPC_CREAT | 0x1B6)) < 0){
+		printf("ERRO >> Não foi possível criar fila de tuplas \n");
+		exit(1);
+	}
 
-
+	msg.tipo = 49;	//Define o tipo
+	msg.job = encontraUltimoJob(); //Define o identificador unico do job
 	strcpy(msg.arq, arq_executavel);
-
 	msg.offset = seg;
 
-    //Soh pode escrever na fila caso ela jah exista
-	msgqid = verificaFila(0x14002713);
+	key_t msgkey = 0x14002713;
+	if((msgqid = msgget(msgkey, 0x1B6)) < 0){
+		printf("ERRO >> Nenhuma fila encontrada \n");
+		exit(1);
+	}
 
 	//enviar o novo job inserido pelo usuário para tratamento
 	int msgsize = sizeof(struct mensagem) - sizeof(long);
 	printf("\njob = %d, arquivo = %s, delay = %d segundos", msg.job, msg.arq, msg.offset);
-    	if(msgsnd(msgqid , &msg, msgsize, 2) < 0){
-
+    if(msgsnd(msgqid , &msg, msgsize, 0) < 0){
 		printf("Problema ao enviar as info do novo job\n");
 	}
-
-	// Essa parte já está implementada pelo escalonador
-	/*time_t start = time(NULL);
-
-	while(1) 
-		if(difftime(start, time(NULL))*(-1) == seg)
-			break;*/
-
-	printf("\nInicio da execucao apos %d segundos\n", seg);
-	/*A partir daqui o processo escalonador de execução solicita que todos os processos gerentes de execução executem o programa <arq_executavel>, marcando-os como ocupados*/
 }
 
 int main (int argc, char *argv[]){

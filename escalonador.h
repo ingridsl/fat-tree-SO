@@ -14,7 +14,6 @@ std::vector<Processo> proc_scheduled;
 std::queue<Processo> proc_running;
 
 int obterHorarioAtual();
-void criarFila(key_t msgkey);
 
 void shutdown(int sig);
 
@@ -22,8 +21,9 @@ void listaProcessos();
 void rodaProcessos();
 void removeProcesso(int id);
 
-void adicionaEscalonador(int job, char* arq, int offset, int times);
+void adicionaEscalonador(int job, char* arq, int offset);
 void checaEscalonador();
 void executaEscalonador();
+void criarGerentes();
 
 #endif

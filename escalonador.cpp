@@ -19,31 +19,6 @@ int obterHorarioAtual(){
 	return ((horario->tm_hour*60*60 + horario->tm_min*60 + horario->tm_sec) % 86400);
 }
 
-void criarFila(key_t msgkey){
-	// Cria a fila de mensagens 0x1B6, 0666 = 0x29A
-	if((msgqid = msgget(msgkey, IPC_CREAT | 0x1B6)) < 0){
-		printf("Erro na criação da fila a partir do msgget");
-		exit(1);
-    }
-}
-
-void shutdown(int sig){
-	std::cout << "\nServidor deligando...\n\nProcessos que não serão executados: ";
-	listaProcessos();
-	std::cout << "\nProcessos que foram executados: \n";
-	Log::printText();
-
-	msgctl(msgqid, IPC_RMID, NULL);
-
-	// Pode ter que dar kill nos processos e wait
-	//for (int i = 0; i < n_pid /*16*/; i++)
-    //   kill(pid_filho[i], SIGKILL);
-	int status;
-	while(wait(&status) != -1);
-
-	exit(0); //exit(1);
-}
-
 void listaProcessos(){
 	std::cout << "\njob\tarq_exec\t\thh:mm:ss" << std::endl;
 
@@ -79,13 +54,13 @@ void removeProcesso(int id){
 	}
 }
 
-void adicionaEscalonador(int job, char* arq, int offset, int times){
+void adicionaEscalonador(int job, char* arq, int offset){
 	std::cout << "\njob_id = " << job_id << ": " << arq << " com offset de " << 
-		offset << " segundo(s) e executando " << times << " vez(es)" << std::endl;
+		offset << " segundo(s) e executando " << std::endl;
 	int horarioAtual = obterHorarioAtual();
-	for(int i = 1; i <= times; ++i){
-		proc_scheduled.push_back(Processo(job_id, horarioAtual + i*offset, arq));
-	}
+	
+		proc_scheduled.push_back(Processo(job_id, horarioAtual + offset, arq));
+	
 	job_id++;
 }
 
@@ -108,7 +83,7 @@ void checaEscalonador(){
 	}
 }
 
-void criarGerenteProcessos(key_t msgkey){
+void criarGerentes(){
 	int pid_filho_aux[2];
 	char parametro1[10];
 	char parametro2[10];
@@ -245,48 +220,53 @@ void criarGerenteProcessos(key_t msgkey){
 }
 
 
+void shutdown(int sig){
+	printf("\nServidor deligando...\n");
+	kill(pid_filho, SIGTERM);
+	
+	int status;
+	wait(&status);
+
+	msgctl(msgqid, IPC_RMID, NULL);
+	exit(0); //exit(1);
+}
+
+
 void executaEscalonador(){
 	signal(SIGTERM, shutdown);
-
-	Log::appendText(std::string("job\tarq_exec\t\thh:mm:ss"));
 	job_id = 0;
-	key_t msgkey = 0x14002713;
-	criarFila(msgkey);
 
-	criarGerenteProcessos(msgkey);
+	//FILA DE VOLTA
+	key_t msgkey = 0x14002713;
+	if((msgqid = msgget(msgkey, IPC_CREAT | 0x1B6)) < 0){
+		printf("Erro na criação da fila a partir do msgget");
+		exit(1);
+    }
+
+	criarGerentes();
+
 
 	struct mensagem msg;
 	int msgsize = sizeof(struct mensagem) - sizeof(long);
 	while(true){
 
-		if(msgrcv(msgqid, &msg, msgsize, -4, IPC_NOWAIT) != -1){
+		if(msgrcv(msgqid, &msg, msgsize, -50, IPC_NOWAIT) != -1){
 			switch(msg.tipo){
-				case 1:
+				case 49:
+					adicionaEscalonador(msg.job, msg.arq, msg.offset);
+					break;
+				case 50:
 					raise(SIGTERM);
-					break;
-				case 2:
-					listaProcessos();
-					break;
-				case 3:
-					removeProcesso(msg.offset);
-					break;
-				case 4:
-					adicionaEscalonador(msg.job, msg.arq, msg.offset, msg.times);
-					break;
+				break;
 			}	
 		}
 
 		checaEscalonador();
 		rodaProcessos();
-		//sleep(1);
-
 	}
 }
 
-// TODO: Ver a necessidade de adicionar semáfora para partes críticas
-// TODO: Ver melhor como se encaixa o fat tree
-// TODO: Ver melhor questão das estruturas de dados, se há outras pra adicionar
 int main(){
 	executaEscalonador();
-	return 0; //exit(0);
+	return 0; 
 }
