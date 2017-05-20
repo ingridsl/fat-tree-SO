@@ -11,13 +11,8 @@
 #include <unistd.h>
 #include <time.h>
 #include "estrutura.h"
+#include "escalonador.h"
 
-int msgqid_up, msgqid_down;
-int pid_filho;
-int cont_termino;
-
-std::vector<struct exec> execucoes_pendentes;
-std::vector<struct exec> execucoes_terminadas;
 
 int obterHorarioAtual(){
 	time_t t = time(NULL);
