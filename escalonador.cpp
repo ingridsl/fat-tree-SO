@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
-#include <string>
+#include <string.h>
 
 #include <sys/msg.h>
 #include <sys/wait.h>
@@ -19,65 +19,32 @@ int obterHorarioAtual(){
 	return ((horario->tm_hour*60*60 + horario->tm_min*60 + horario->tm_sec) % 86400);
 }
 
-void listaProcessos(){
-	std::cout << "\njob\tarq_exec\t\thh:mm:ss" << std::endl;
+void adicionaExecucaoPostergada(struct mensagem recebido){
+	int horario_atual = obterHorarioAtual();
+	struct exec novo;
+	novo.tipo = 1;
+	novo.job = recebido.job;
+	strcpy(novo.arq,recebido.arq);
+	novo.tempo = horario_atual + recebido.delay;
 
-	std::vector<Processo>::iterator it = proc_scheduled.begin();
-	for( ; it != proc_scheduled.end(); it++){
-		// Com as variaveis do processo senfo privadas nao consegue acessar as funcoes de get por causa do wait
-		int runtime = it->GetRuntime();
-		int hora = (runtime / (60*60));
-		int minuto = ((runtime - (hora*60*60))/60);
-		int segundo = (runtime - hora*60*60 - minuto*60);
-		printf("%d\t%s\t\t%d:%d:%d\n", it->GetId(), it->GetArq().c_str(), hora, minuto, segundo);
-	}
-}
+	//printf("\n%d, %s, %d\n", (int)novo.tipo, novo.arq, novo.tempo);
 
-void rodaProcessos(){
-	if(!proc_running.empty()){
-		//printf("\nAQUI2");
-		pid_t pid = proc_running.front().Rodar();
-		//pid_filho[n_pid++] = pid;
-		//printf("\nPID_FILHO: %d", pid);
-		proc_running.pop();
-	}
-}
-
-void removeProcesso(int id){
-	if(!proc_scheduled.empty()){
-		std::vector<Processo>::iterator it = proc_scheduled.begin();
-		for( ; it != proc_scheduled.end(); ){
-			if(it->GetId() == id){
-				it = proc_scheduled.erase(it);
-			} else it++;
-		}
-	}
-}
-
-void adicionaEscalonador(int job, char* arq, int offset){
-	std::cout << "\njob_id = " << job_id << ": " << arq << " com offset de " << 
-		offset << " segundo(s) e executando " << std::endl;
-	int horarioAtual = obterHorarioAtual();
-	
-		proc_scheduled.push_back(Processo(job_id, horarioAtual + offset, arq));
-	
-	job_id++;
+	execucoes_pendentes.push_back(novo);	
 }
 
 void checaEscalonador(){
-	if(!proc_scheduled.empty()){
-		int horarioAtual = obterHorarioAtual();
-		std::vector<Processo>::iterator it = proc_scheduled.begin();
-		for( ; it != proc_scheduled.end(); ){
-			//printf("\n(%d <= %d)", it->GetRuntime(), horarioAtual);
-			if(it->GetRuntime() <= horarioAtual){
-				//printf("\nAQUI");
-				it->SetStatus(Pstatus::DORMINDO);
-				proc_running.push(*it);
-				it = proc_scheduled.erase(it);
+	int horarioAtual = obterHorarioAtual();
+
+	if(!execucoes_pendentes.empty()){
+		std::vector<struct exec>::iterator it = execucoes_pendentes.begin();
+		for( ; it != execucoes_pendentes.end(); ){
+
+			if(it->tempo <= horarioAtual){
+				it = execucoes_pendentes.erase(it);
+				int msgsize = sizeof(struct exec) - sizeof(long);
+				msgsnd(msgqid_envio, &it, msgsize ,0); //manda para filho
 			} else {
 				it++;
-				//printf("THERE");
 			}
 		}
 	}
@@ -222,23 +189,31 @@ void criarGerentes(){
 
 void shutdown(int sig){
 	printf("\nServidor deligando...\n");
-	kill(pid_filho, SIGTERM);
+	kill(pid_filho, SIGUSR1);
 	
 	int status;
 	wait(&status);
 
-	msgctl(msgqid, IPC_RMID, NULL);
+	msgctl(msgqid_recebimento, IPC_RMID, NULL);
+	msgctl(msgqid_envio, IPC_RMID, NULL);
 	exit(0); //exit(1);
 }
 
 
 void executaEscalonador(){
-	signal(SIGTERM, shutdown);
+	signal(SIGUSR1, shutdown);
 	job_id = 0;
 
 	//FILA DE VOLTA
-	key_t msgkey = 0x14002713;
-	if((msgqid = msgget(msgkey, IPC_CREAT | 0x1B6)) < 0){
+	key_t msgkey_recebimento = 0x14002713;
+	if((msgqid_recebimento = msgget(msgkey_recebimento, IPC_CREAT | 0x1B6)) < 0){
+		printf("Erro na criação da fila a partir do msgget");
+		exit(1);
+    }
+
+    //FILA DE IDA
+    key_t msgkey_envio = 0x14002712;
+	if((msgqid_envio = msgget(msgkey_envio, IPC_CREAT | 0x1B6)) < 0){
 		printf("Erro na criação da fila a partir do msgget");
 		exit(1);
     }
@@ -250,19 +225,18 @@ void executaEscalonador(){
 	int msgsize = sizeof(struct mensagem) - sizeof(long);
 	while(true){
 
-		if(msgrcv(msgqid, &msg, msgsize, -50, IPC_NOWAIT) != -1){
+		if(msgrcv(msgqid_recebimento, &msg, msgsize, -50, IPC_NOWAIT) != -1){
 			switch(msg.tipo){
 				case 49:
-					adicionaEscalonador(msg.job, msg.arq, msg.offset);
+					adicionaExecucaoPostergada(msg);
 					break;
 				case 50:
-					raise(SIGTERM);
+					raise(SIGUSR1);
 				break;
 			}	
 		}
 
 		checaEscalonador();
-		rodaProcessos();
 	}
 }
 

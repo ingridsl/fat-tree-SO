@@ -17,8 +17,8 @@ void shutdown(int sig){
 	int status1, status2;
 
 	if(nivel != 4){
-		kill(pid_filho_1, SIGTERM);
-		kill(pid_filho_2, SIGTERM);
+		kill(pid_filho_1, SIGUSR1);
+		kill(pid_filho_2, SIGUSR1);
 		wait(&status1);
 		wait(&status2);
 	}
@@ -27,7 +27,7 @@ void shutdown(int sig){
 }
 
 int main (int argc, char *argv[]){
-	signal(SIGTERM, shutdown);
+	signal(SIGUSR1, shutdown);
 
 	nivel = atoi(argv[1]);
 	if(argc > 2){

@@ -1,17 +1,18 @@
 #ifndef ESCALONADOR_H
 #define ESCALONADOR_H
 
-#include "processo.h"
+#include "estrutura.h"
 
 #include <sys/types.h>
 #include <vector>
 #include <queue>
 
-int job_id, msgqid;// 15 ou 16
+int job_id, msgqid_recebimento, msgqid_envio;// 15 ou 16
 int n_pid = 0; // coloquei só pra auxiliar enquanto não tem o fat tree
 int pid_filho;
-std::vector<Processo> proc_scheduled;
-std::queue<Processo> proc_running;
+
+std::vector<struct exec> execucoes_pendentes;
+std::queue<struct exec> proc_running;
 
 int obterHorarioAtual();
 

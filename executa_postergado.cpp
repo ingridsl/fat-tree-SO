@@ -79,7 +79,7 @@ void executaPostergado(int seg, char arq_executavel[N]){
 	msg.tipo = 49;	//Define o tipo
 	msg.job = encontraUltimoJob(); //Define o identificador unico do job
 	strcpy(msg.arq, arq_executavel);
-	msg.offset = seg;
+	msg.delay = seg;
 
 	key_t msgkey = 0x14002713;
 	if((msgqid = msgget(msgkey, 0x1B6)) < 0){
@@ -89,7 +89,7 @@ void executaPostergado(int seg, char arq_executavel[N]){
 
 	//enviar o novo job inserido pelo usuário para tratamento
 	int msgsize = sizeof(struct mensagem) - sizeof(long);
-	printf("\njob = %d, arquivo = %s, delay = %d segundos", msg.job, msg.arq, msg.offset);
+	printf("\nEnviado job = %d, arquivo = %s, delay = %d segundos\n", msg.job, msg.arq, msg.delay);
     if(msgsnd(msgqid , &msg, msgsize, 0) < 0){
 		printf("Problema ao enviar as info do novo job\n");
 	}
