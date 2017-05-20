@@ -1,6 +1,3 @@
-#include "escalonador.h"
-#include "log.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
@@ -8,10 +5,19 @@
 
 #include <sys/msg.h>
 #include <sys/wait.h>
+#include <sys/types.h>
+#include <vector>
+#include <queue>
 
 #include <unistd.h>
 #include <time.h>
 #include "estrutura.h"
+
+int msgqid_recebimento, msgqid_envio;// 15 ou 16
+int pid_filho;
+
+std::vector<struct exec> execucoes_pendentes;
+//std::queue<struct exec> proc_running;
 
 int obterHorarioAtual(){
 	time_t t = time(NULL);
@@ -206,7 +212,6 @@ void shutdown(int sig){
 
 void executaEscalonador(){
 	signal(SIGUSR1, shutdown);
-	job_id = 0;
 
 	//FILA DE VOLTA
 	key_t msgkey_recebimento = 0x14002713;

@@ -1,8 +1,8 @@
 fat_tree: escalonador executa_postergado gerente shutdown
 
 
-escalonador: escalonador.cpp processo.cpp log.cpp
-	g++ escalonador.cpp processo.cpp log.cpp -o escalonador
+escalonador: escalonador.cpp
+	g++ escalonador.cpp -o escalonador
 
 executa_postergado: executa_postergado.cpp
 	g++ executa_postergado.cpp -o executa_postergado

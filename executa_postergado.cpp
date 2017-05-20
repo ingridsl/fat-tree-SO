@@ -1,18 +1,19 @@
-#include "executa_postergado.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
-#include <string>
 #include <string.h>
 
 #include <sys/msg.h>
 #include <sys/wait.h>
+#include <sys/types.h>
+#include <vector>
+#include <queue>
 
 #include <unistd.h>
 #include <time.h>
+#include "estrutura.h"
 
-
+int job_id, msgqid, msgqidjob;
 using namespace std;
 
 void checaQuantidade(int quantidade){
@@ -55,8 +56,8 @@ int encontraUltimoJob(){
 		if(msgsnd(msgqidjob , &msgjobsnd, jobsize, 0) < 0)
 			printf("Problema ao enviar numero unico de tupla\n");
 	}else{
-		jobaux = msgjobrcv.job;
-		msgjobsnd.job = jobaux + 1;
+		jobaux = msgjobrcv.job+1;
+		msgjobsnd.job = jobaux;
 
 		if(msgsnd(msgqidjob , &msgjobsnd, jobsize, 0) < 0)
 			printf("Problema ao enviar numero unico de tupla2\n");
