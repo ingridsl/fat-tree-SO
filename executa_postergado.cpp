@@ -12,8 +12,8 @@
 #include <unistd.h>
 #include <time.h>
 #include "estrutura.h"
+#include "executa_postergado.h"
 
-int job_id, msgqid, msgqidjob;
 using namespace std;
 
 void checaQuantidade(int quantidade){
@@ -23,7 +23,6 @@ void checaQuantidade(int quantidade){
 	}
 }
 
-//verifica se numero de sequencia enviado está ok
 void numOk(char * seg){
 	int tam = strlen(seg);
 
@@ -35,7 +34,6 @@ void numOk(char * seg){
 	}
 }
 
-//verifica se arquivo executavel está ok
 void arquivoOK(char * arqExe){
 	if(access(arqExe, F_OK)==-1){
 		printf("ERRO >> Arquivo inexistente\n");
