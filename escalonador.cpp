@@ -13,11 +13,12 @@
 #include <time.h>
 #include "estrutura.h"
 
-int msgqid_recebimento, msgqid_envio;// 15 ou 16
+int msgqid_up, msgqid_down;
 int pid_filho;
+int cont_termino;
 
 std::vector<struct exec> execucoes_pendentes;
-//std::queue<struct exec> proc_running;
+std::queue<struct exec> execucoes_terminadas;
 
 int obterHorarioAtual(){
 	time_t t = time(NULL);
@@ -31,7 +32,11 @@ void adicionaExecucaoPostergada(struct mensagem recebido){
 	novo.tipo = 1;
 	novo.job = recebido.job;
 	strcpy(novo.arq,recebido.arq);
+
 	novo.tempo = horario_atual + recebido.delay;
+	novo.tempo_solicitacao = horario_atual;
+	novo.tempo_termino = 0;
+	novo.tempo_inicio = 0;
 
 	//printf("\n%d, %s, %d\n", (int)novo.tipo, novo.arq, novo.tempo);
 
@@ -51,8 +56,8 @@ void checaEscalonador(){
 				int msgsize = sizeof(struct exec) - sizeof(long);
 
 				//printf("\n %d, %s, %d", (int)aux.tipo, aux.arq, aux.tempo);
-
-				msgsnd(msgqid_envio, &aux, msgsize ,0); //manda para filho
+				aux.tempo_inicio = obterHorarioAtual();
+				msgsnd(msgqid_down, &aux, msgsize ,0); //manda para filho
 			} else {
 				it++;
 			}
@@ -196,6 +201,27 @@ void criarGerentes(){
 	}
 }
 
+void imprimeRestante(){
+	if(!execucoes_pendentes.empty()){
+		std::vector<struct exec>::iterator it = execucoes_pendentes.begin();
+		for( ; it != execucoes_pendentes.end(); it++ ){
+			printf("\n %d, %s, %d\n", (int) it->tipo, it->arq, it->tempo);
+			execucoes_pendentes.erase(it);			
+		}
+	}
+}
+void imprimeConcluido(struct exec finalizado){
+	int hora_ini = (finalizado.tempo_inicio / (60*60));
+	int minuto_ini = ((finalizado.tempo_inicio - (hora_ini*60*60))/60);
+	int segundo_ini = (finalizado.tempo_inicio - hora_ini*60*60 - minuto_ini*60);
+	int hora_fim = (finalizado.tempo_termino / (60*60));
+	int minuto_fim = ((finalizado.tempo_termino - (hora_fim*60*60))/60);
+	int segundo_fim = (finalizado.tempo_termino - hora_fim*60*60 - minuto_fim*60);
+	printf("\n\nJob %d terminado, arquivo: %s, inicio de execucao as %dh%dm%ds e fim %dh%dm%ds, com turnaround de: %d\n",
+		finalizado.job, finalizado.arq, hora_ini,minuto_ini,segundo_ini,
+		hora_fim,minuto_fim,segundo_fim, finalizado.tempo_termino - 
+		finalizado.tempo_inicio);
+}
 
 void shutdown(int sig){
 	printf("\nServidor deligando...\n");
@@ -204,25 +230,28 @@ void shutdown(int sig){
 	int status;
 	wait(&status);
 
-	msgctl(msgqid_recebimento, IPC_RMID, NULL);
-	msgctl(msgqid_envio, IPC_RMID, NULL);
+	imprimeRestante();
+
+	msgctl(msgqid_up, IPC_RMID, NULL);
+	msgctl(msgqid_down, IPC_RMID, NULL);
 	exit(0); //exit(1);
 }
 
 
 void executaEscalonador(){
 	signal(SIGUSR1, shutdown);
+	cont_termino = 0;
 
 	//FILA DE VOLTA
-	key_t msgkey_recebimento = 0x14002713;
-	if((msgqid_recebimento = msgget(msgkey_recebimento, IPC_CREAT | 0x1B6)) < 0){
+	key_t msgkey_up = 0x14002713;
+	if((msgqid_up = msgget(msgkey_up, IPC_CREAT | 0x1B6)) < 0){
 		printf("Erro na criação da fila a partir do msgget");
 		exit(1);
     }
 
     //FILA DE IDA
-    key_t msgkey_envio = 0x14002712;
-	if((msgqid_envio = msgget(msgkey_envio, IPC_CREAT | 0x1B6)) < 0){
+    key_t msgkey_down = 0x14002712;
+	if((msgqid_down = msgget(msgkey_down, IPC_CREAT | 0x1B6)) < 0){
 		printf("Erro na criação da fila a partir do msgget");
 		exit(1);
     }
@@ -231,18 +260,33 @@ void executaEscalonador(){
 
 
 	struct mensagem msg;
+	struct exec finalizado;
 	int msgsize = sizeof(struct mensagem) - sizeof(long);
+	int execsize = sizeof(struct exec) - sizeof(long);
 	while(true){
 
-		if(msgrcv(msgqid_recebimento, &msg, msgsize, -50, IPC_NOWAIT) != -1){
+		if(msgrcv(msgqid_up, &msg, msgsize, -50, IPC_NOWAIT) != -1){
 			switch(msg.tipo){
 				case 49:
+
 					adicionaExecucaoPostergada(msg);
 					break;
 				case 50:
 					raise(SIGUSR1);
 				break;
 			}	
+		}
+		if(msgrcv(msgqid_up, &finalizado, execsize, 51, IPC_NOWAIT) != -1){
+			cont_termino++;
+
+			if(cont_termino == 15){
+				finalizado.tempo_termino = obterHorarioAtual();
+				cont_termino = 0;
+				execucoes_terminadas.push(finalizado);
+
+				finalizado = execucoes_terminadas.back();
+				imprimeConcluido(finalizado);	
+			}
 		}
 
 		checaEscalonador();

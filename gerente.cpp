@@ -20,6 +20,12 @@ int msgqid_up, msgqid_down;
 
 int estado;
 
+int obterHorarioAtual(){
+	time_t t = time(NULL);
+	struct tm *horario = localtime(&t);
+	return ((horario->tm_hour*60*60 + horario->tm_min*60 + horario->tm_sec) % 86400);
+}
+
 void shutdown(int sig){
 	int status1, status2;
 
@@ -38,29 +44,70 @@ void trabalha(){
 	int pid_aux;
 	int msgsize = sizeof(struct exec) - sizeof(long);
 	int wait_status;
+	int identificador_pai = identificador/2;
+	int conta_terminos = 0;
 
-	while(true){
-		
-		msgrcv(msgqid_down, &msg, msgsize, identificador, 0);
-
-		msgfilho = msg;
-		msgfilho.tipo = identificador*2;
-		msgsnd(msgqid_down, &msgfilho, msgsize ,0);
-		msgfilho.tipo = identificador*2+1;
-		msgsnd(msgqid_down, &msgfilho, msgsize ,0);
-
-		if(estado == LIVRE){
-			estado = OCUPADO;
+	if(identificador < 8){
+		while(true){
 			
-			pid_aux = fork();
-			if(pid_aux < 0 ){
-				printf("Erro na criação de árvore a partir do Fork()\n"); exit(1); }
-			if(pid_aux == 0){
-				execl(msg.arq, msg.arq, (char*) NULL);
-			}else{
-				wait(&wait_status);
-				estado = LIVRE; 
-			}		
+			if(msgrcv(msgqid_down, &msg, msgsize, identificador, IPC_NOWAIT) != -1){
+			
+				msgfilho = msg;
+				msgfilho.tipo = identificador*2;
+				msgsnd(msgqid_down, &msgfilho, msgsize ,0);
+				msgfilho.tipo = identificador*2+1;
+				msgsnd(msgqid_down, &msgfilho, msgsize ,0);
+
+				if(estado == LIVRE){
+					estado = OCUPADO;
+					
+					pid_aux = fork();
+					if(pid_aux < 0 ){
+						printf("Erro na criação de processo a partir do Fork()\n"); exit(1); }
+					if(pid_aux == 0){
+						execl(msg.arq, msg.arq, (char*) NULL);
+					}else{
+						wait(&wait_status);
+
+						if(identificador != 1){
+							msg.tipo = identificador_pai;
+						}else{
+							msg.tipo = 51;
+						}
+						msg.tempo_termino = obterHorarioAtual();
+						msgsnd(msgqid_up, &msg, msgsize ,0);
+						estado = LIVRE; 
+					}		
+				}
+			}
+			if(msgrcv(msgqid_up, &msg, msgsize, identificador, IPC_NOWAIT) != -1){
+				if(identificador != 1){
+						msg.tipo = identificador_pai;
+					}else{
+						msg.tipo = 51;
+				}
+				msgsnd(msgqid_up, &msg, msgsize ,0);
+			}
+		}
+	}else{
+		while(true){
+			msgrcv(msgqid_down, &msg, msgsize, identificador, 0);
+			if(estado == LIVRE){
+				estado = OCUPADO;
+				pid_aux = fork();
+				if(pid_aux < 0 ){
+				printf("Erro na criação de processo a partir do Fork()\n"); exit(1); }
+				if(pid_aux == 0){
+					execl(msg.arq, msg.arq, (char*) NULL);
+				}else{
+					wait(&wait_status);
+					estado = LIVRE; 
+
+					msg.tempo_termino = obterHorarioAtual();
+					msg.tipo = identificador_pai;
+					msgsnd(msgqid_up, &msg, msgsize ,0);
+				}		
+			}
 		}
 	}
 }

@@ -19,7 +19,10 @@ struct exec{
 	long tipo;
 	int job;
 	char arq[N];
-	int tempo;
+	int tempo; //delay
+	int tempo_solicitacao;
+	int tempo_inicio;
+	int tempo_termino;
 };
 
 #endif
