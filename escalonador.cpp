@@ -38,7 +38,7 @@ void adicionaExecucaoPostergada(struct mensagem recebido){
 	novo.tempo_termino = 0;
 	novo.tempo_inicio = 0;
 
-	//printf("\n%d, %s, %d\n", (int)novo.tipo, novo.arq, novo.tempo);
+	//printf("\n\n%d, %s, %d\n", (int)novo.job, novo.arq, novo.tempo);
 
 	execucoes_pendentes.push_back(novo);	
 }
@@ -203,13 +203,15 @@ void criarGerentes(){
 
 void imprimeRestante(){
 	if(!execucoes_pendentes.empty()){
-		std::vector<struct exec>::iterator it = execucoes_pendentes.begin();
-		for( ; it != execucoes_pendentes.end(); it++ ){
-			printf("\n %d, %s, %d\n", (int) it->tipo, it->arq, it->tempo);
-			execucoes_pendentes.erase(it);			
+		printf("\nExecucoes que ficaram pendentes:\n");
+		for(std::vector<int>::size_type i = 0; i != execucoes_pendentes.size(); i++) {
+   			printf("Job: %d, arquivo %s, delay %d\n", (int) execucoes_pendentes[i].job,
+   			 execucoes_pendentes[i].arq, execucoes_pendentes[i].tempo - execucoes_pendentes[i].tempo_solicitacao );
 		}
 	}
+	execucoes_pendentes.clear();
 }
+
 void imprimeConcluido(struct exec finalizado){
 	int hora_ini = (finalizado.tempo_inicio / (60*60));
 	int minuto_ini = ((finalizado.tempo_inicio - (hora_ini*60*60))/60);
@@ -268,7 +270,6 @@ void executaEscalonador(){
 		if(msgrcv(msgqid_up, &msg, msgsize, -50, IPC_NOWAIT) != -1){
 			switch(msg.tipo){
 				case 49:
-
 					adicionaExecucaoPostergada(msg);
 					break;
 				case 50:
