@@ -24,7 +24,7 @@ void checaQuantidade(int quantidade){
 }
 
 //verifica se numero de sequencia enviado está ok
-int numOk(char * seg){
+void numOk(char * seg){
 	int tam = strlen(seg);
 
 	for (int i = 0; i < tam; ++i){
@@ -36,7 +36,7 @@ int numOk(char * seg){
 }
 
 //verifica se arquivo executavel está ok
-int arquivoOK(char * arqExe){
+void arquivoOK(char * arqExe){
 	if(access(arqExe, F_OK)==-1){
 		printf("ERRO >> Arquivo inexistente\n");
 		exit(0);

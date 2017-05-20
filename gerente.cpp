@@ -45,7 +45,7 @@ void trabalha(){
 	int msgsize = sizeof(struct exec) - sizeof(long);
 	int wait_status;
 	int identificador_pai = identificador/2;
-	int conta_terminos = 0;
+	//int conta_terminos = 0;
 
 	if(identificador < 8){
 		while(true){

@@ -64,8 +64,6 @@ void criarGerentes(){
 	char parametro1[10];
 	char parametro2[10];
 	char parametronivel[5];
-	int nivel1 = 1, nivel2 = 2, nivel3 = 3, nivel4 = 4;
-
 
 	if((pid_filho = fork()) < 0 ){ /*GERENTE 1 NIVEL 1*/
 		printf("Erro na criação de árvore a partir do Fork()\n"); exit(1); }
