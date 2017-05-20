@@ -1,27 +1,31 @@
 # fat-tree-SO
 Execução Multi-Processo Postergada Utilizando FAT TREE (Trabalho SO)
 
-escalonador:
+Compilação:
+	Basta navegar até o diretório da "fat-tree-so" no terminal e executar o comando:
+	$ make
 
-	g++ escalonador.cpp processo.cpp log.cpp -o escalonador
+	Isso irá gerar os executáveis automaticamente
 
-	./escalonador&
+Também pode ser feita de forma manual basta navegar até o diretório da "fat-tree-so" no terminal e executar os comandos:
+	$ g++ escalonador.cpp processo.cpp log.cpp -o escalonador
+	$ g++ executa_postergado.cpp -o executa_postergado
+	$ g++ gerente.cpp -o gerente
+	$ g++ shutdown.cpp -o shutdown
 
-	- Irá mostrar o id e o pid
-	- Para ver todos abertos: ps -l
-	- Para remover algum: kill [pid]
-	
-executa postergado:
+Execução:
+	escalonador:
+		$ ./escalonador&
 
-	g++ executa_postergado.cpp -o executa_postergado
+		- Irá mostrar o id e o pid
+		- Para ver todos abertos: ps -l
+		- Para remover algum: kill [pid]
 
-	./executa_postergado 5 hello_world
+	executa postergado:
+		$ ./executa_postergado 5 hello_world
 
-	- Depois de escalonador ter sido executado com sucesso
+		- Depois de escalonador ter sido executado com sucesso
+		- Irá enviar o job ao escalonador
 
-gerente:
-	g++ gerente.cpp -o gerente
-	
-shutdown:
-	g++ shutdown.cpp -o shutdown
-	./shutdown
+	shutdown:
+		$ ./shutdown
