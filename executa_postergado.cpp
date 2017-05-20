@@ -48,12 +48,12 @@ int encontraUltimoJob(){
 	int jobaux;
 	int jobsize = sizeof(struct job) - sizeof(long);
 
-	msgjobsnd.tipo = 0;
+	msgjobsnd.tipo = 1;
 	//Recebe o ultimo job
 	if (msgrcv(msgqidjob, &msgjobrcv, jobsize, 0, IPC_NOWAIT) < 0){
 		jobaux = msgjobsnd.job = 1;
 		if(msgsnd(msgqidjob , &msgjobsnd, jobsize, 0) < 0)
-			perror(":");
+			printf("Problema ao enviar numero unico de tupla\n");
 	}else{
 		jobaux = msgjobrcv.job;
 		msgjobsnd.job = jobaux + 1;

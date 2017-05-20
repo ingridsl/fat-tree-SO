@@ -13,6 +13,14 @@ int main(){
 		exit(1);
 	}
 
+	key_t msgkey_job = 0x14002000;
+	int msgqidjob;
+	if((msgqidjob = msgget(msgkey_job, 0x1B6)) < 0){
+		printf("Erro ao executar msgget");
+		exit(1);
+	}
+	msgctl(msgqidjob, IPC_RMID, NULL);
+
 	struct mensagem msg = { 50, 0, ' ', 0, 0 };
 	int msg_tam = sizeof(struct mensagem) - sizeof(long);
     if(msgsnd(msgqid, &msg, msg_tam, 2) < 0){
