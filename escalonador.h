@@ -18,6 +18,9 @@ int pid_filho;
 /** Contador de jobs que finalizaram a execução*/
 int cont_termino;
 
+/** Variável para impedir o lançamento de novos jobs enquanto há outro em execução **/
+int ocupado;
+
 /** Vetor de estruturas de execução para as execuções pendentes*/
 std::vector<struct exec> execucoes_pendentes;
 

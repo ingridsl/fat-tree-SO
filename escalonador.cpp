@@ -45,7 +45,8 @@ void checaEscalonador(){
 		std::vector<struct exec>::iterator it = execucoes_pendentes.begin();
 		for( ; it != execucoes_pendentes.end(); ){
 
-			if(it->tempo <= horarioAtual){
+			if(it->tempo <= horarioAtual && ocupado != 1){
+				ocupado = 1;
 				struct exec aux = execucoes_pendentes[std::distance(execucoes_pendentes.begin(), it)];
 				execucoes_pendentes.erase(it);
 				int msgsize = sizeof(struct exec) - sizeof(long);
@@ -249,6 +250,7 @@ void shutdown(int sig){
 void executaEscalonador(){
 	signal(SIGUSR1, shutdown);
 	cont_termino = 0;
+	ocupado = 0;
 
 	//FILA DE VOLTA
 	key_t msgkey_up = 0x14002713;
@@ -289,6 +291,7 @@ void executaEscalonador(){
 			if(cont_termino == 15){
 				finalizado.tempo_termino = obterHorarioAtual();
 				cont_termino = 0;
+				ocupado = 0;
 				execucoes_terminadas.push_back(finalizado);
 
 				finalizado = execucoes_terminadas.back();

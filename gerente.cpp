@@ -30,6 +30,9 @@ int obterHorarioAtual(){
 void shutdown(int sig){
 	int status1, status2;
 
+	if(identificador == 1 && estado == OCUPADO){
+		printf("Job que está executando sob a solicitação de shutdown: %d, arquivo %s\n", msg.job, msg.arq);
+	}
 	if(identificador < 8){ //Exclui nivel 4 da arvore
 		kill(pid_filho_1, SIGUSR1);
 		kill(pid_filho_2, SIGUSR1);
@@ -41,12 +44,10 @@ void shutdown(int sig){
 }
 
 void trabalha(){
-	struct exec msg, msgfilho;
 	int pid_aux;
 	int msgsize = sizeof(struct exec) - sizeof(long);
 	int wait_status;
 	int identificador_pai = identificador/2;
-	//int conta_terminos = 0;
 
 	if(identificador < 8){
 		while(true){
