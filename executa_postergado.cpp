@@ -70,7 +70,7 @@ void executaPostergado(int seg, char arq_executavel[N]){
 	
 
 	key_t msgkey_job = 0x14002000;
-	if((msgqidjob = msgget(msgkey_job, IPC_CREAT | 0x1B6)) < 0){
+	if((msgqidjob = msgget(msgkey_job, IPC_CREAT | 0x1B6)) < 0){ //permissão: 110 110 110 (RWX)
 		printf("ERRO >> Não foi possível criar fila de tuplas \n");
 		exit(1);
 	}
@@ -89,7 +89,7 @@ void executaPostergado(int seg, char arq_executavel[N]){
 	//enviar o novo job inserido pelo usuário para tratamento
 	int msgsize = sizeof(struct mensagem) - sizeof(long);
 	printf("\nEnviado job = %d, arquivo = %s, delay = %d segundos\n", msg.job, msg.arq, msg.delay);
-    if(msgsnd(msgqid , &msg, msgsize, 0) < 0){
+   	if(msgsnd(msgqid , &msg, msgsize, 0) < 0){
 		printf("Problema ao enviar as info do novo job\n");
 	}
 }
