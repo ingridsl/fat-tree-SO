@@ -3,7 +3,6 @@
 
 #include "estrutura.h"
 
-#include <sys/types.h>
 #include <vector>
 #include <queue>
 

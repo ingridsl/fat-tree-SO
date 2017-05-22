@@ -10,6 +10,7 @@
 
 #include <unistd.h>
 #include <time.h>
+
 #include "estrutura.h"
 #include "escalonador.h"
 

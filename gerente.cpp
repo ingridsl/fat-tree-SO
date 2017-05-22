@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <iostream>
 #include <string>
+#include <cstddef>
 
 #include <sys/msg.h>
 #include <sys/wait.h>
@@ -9,16 +10,16 @@
 
 #include <unistd.h>
 #include <time.h>
-#include "estrutura.h"
 
-#define OCUPADO 1
-#define LIVRE 0
+#include "gerente.h"
 
-int identificador;
-int pid_filho_1, pid_filho_2;
-int msgqid_up, msgqid_down;
 
-int estado;
+const char* obterNomeArq(char *arq){
+	std::string nome_arq(arq);
+	std::size_t pos = nome_arq.find_last_of("/");
+	if(pos != std::string::npos) nome_arq = nome_arq.substr(pos+1);
+	return nome_arq.c_str();
+}
 
 int obterHorarioAtual(){
 	time_t t = time(NULL);
@@ -66,7 +67,8 @@ void trabalha(){
 						printf("Erro na criação de processo a partir do Fork()\n"); exit(1);
 					}
 					if(pid_aux == 0){
-						execl(msg.arq, msg.arq, (char*) NULL);
+						const char* nome_arq = obterNomeArq(msg.arq);
+						execl(msg.arq, nome_arq, (char*) NULL);
 					}else{
 						wait(&wait_status);
 

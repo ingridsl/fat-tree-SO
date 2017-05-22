@@ -11,10 +11,8 @@
 
 #include <unistd.h>
 #include <time.h>
-#include "estrutura.h"
-#include "executa_postergado.h"
 
-using namespace std;
+#include "executa_postergado.h"
 
 void checaQuantidade(int quantidade){
 	if(quantidade != 3){

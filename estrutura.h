@@ -3,6 +3,7 @@
 
 #define N 200
 
+/**/
 struct mensagem {
 	long tipo; // tipo da mensagem, para o escalonador ser usado = 49
 	int job; // ?
@@ -10,11 +11,13 @@ struct mensagem {
 	int delay; // segundos da postergacao
 };
 
+/**/
 struct job {
 	long tipo;
 	int job;
 };
 
+/**/
 struct exec{
 	long tipo;
 	int job;
