@@ -7,28 +7,37 @@
 #define OCUPADO 1
 #define LIVRE 0
 
-/**/
+/** */
 int identificador;
-/**/
+/** */
 int pid_filho_1, pid_filho_2;
-/**/
+/** */
 int msgqid_up, msgqid_down;
-/**/
+/** */
 int estado;
 
-/**/
-struct exec msg, msgfilho;
+/** 
+* @param 
+* @return 
+*/
+std::string obterNomeArq(char *arq);
 
-/**/
-const char* obterNomeArq(char *arq);
-
-/**/
+/** 
+* @param 
+* @return 
+*/
 int obterHorarioAtual();
 
-/**/
+/** 
+* @param 
+* @return 
+*/
 void shutdown(int sig);
 
-/**/
+/** 
+* @param 
+* @return 
+*/
 void trabalha();
 
 #endif

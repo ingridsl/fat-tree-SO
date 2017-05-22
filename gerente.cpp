@@ -14,11 +14,11 @@
 #include "gerente.h"
 
 
-const char* obterNomeArq(char *arq){
+std::string obterNomeArq(char *arq){
 	std::string nome_arq(arq);
 	std::size_t pos = nome_arq.find_last_of("/");
 	if(pos != std::string::npos) nome_arq = nome_arq.substr(pos+1);
-	return nome_arq.c_str();
+	return nome_arq;
 }
 
 int obterHorarioAtual(){
@@ -68,7 +68,7 @@ void trabalha(){
 						printf("Erro na criação de processo a partir do Fork()\n"); exit(1);
 					}
 					if(pid_aux == 0){
-						const char* nome_arq = obterNomeArq(msg.arq);
+						const char* nome_arq = obterNomeArq(msg.arq).c_str();
 						execl(msg.arq, nome_arq, (char*) NULL);
 					}else{
 						wait(&wait_status);
@@ -103,7 +103,8 @@ void trabalha(){
 					printf("Erro na criação de processo a partir do Fork()\n"); exit(1);
 				}
 				if(pid_aux == 0){
-					execl(msg.arq, msg.arq, (char*) NULL);
+					const char* nome_arq = obterNomeArq(msg.arq).c_str();
+					execl(msg.arq, nome_arq, (char*) NULL);
 				}else{
 					wait(&wait_status);
 					estado = LIVRE; 
