@@ -122,13 +122,14 @@ int main (int argc, char *argv[]){
 		pid_filho_2 = atoi(argv[3]);
 	}
 
+	//FILA DE VOLTA
 	key_t msgkey_up = 0x14002713;
 	if((msgqid_up = msgget(msgkey_up, 0x1B6)) < 0){ //permissão: 110 110 110 (RWX)
 		printf("Erro na obtencao da fila a partir do msgget");
 		exit(1);
    	}
 
-    //FILA DE IDA
+	//FILA DE IDA
 	key_t msgkey_down = 0x14002712;
 	if((msgqid_down = msgget(msgkey_down, 0x1B6)) < 0){//permissão: 110 110 110 (RWX)
 		printf("Erro na obtencao da fila a partir do msgget");
