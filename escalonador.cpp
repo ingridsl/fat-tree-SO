@@ -230,7 +230,7 @@ void imprimeExecutados(){
 }
 
 void shutdown(int sig){
-	printf("\nServidor deligando...\n");
+	printf("\nServidor desligando...\n");
 	kill(pid_filho, SIGUSR1);
 	
 	int status;
@@ -251,17 +251,17 @@ void executaEscalonador(){
 
 	//FILA DE VOLTA
 	key_t msgkey_up = 0x14002713;
-	if((msgqid_up = msgget(msgkey_up, IPC_CREAT | 0x1B6)) < 0){
+	if((msgqid_up = msgget(msgkey_up, IPC_CREAT | 0x1B6)) < 0){ //permissão: 110 110 110 (RWX)
 		printf("Erro na criação da fila a partir do msgget");
 		exit(1);
-    }
+    	}
 
-    //FILA DE IDA
-    key_t msgkey_down = 0x14002712;
-	if((msgqid_down = msgget(msgkey_down, IPC_CREAT | 0x1B6)) < 0){
+   	 //FILA DE IDA
+   	key_t msgkey_down = 0x14002712;
+	if((msgqid_down = msgget(msgkey_down, IPC_CREAT | 0x1B6)) < 0){ //permissão: 110 110 110 (RWX)
 		printf("Erro na criação da fila a partir do msgget");
 		exit(1);
-    }
+   	}
 
 	criarGerentes();
 
