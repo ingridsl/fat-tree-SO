@@ -248,57 +248,63 @@ void shutdown(int sig){
 
 
 void executaEscalonador(){
-	signal(SIGUSR1, shutdown);
-	cont_termino = 0;
-	ocupado = 0;
+	signal(SIGUSR1, shutdown); //Rotina de desligamento caso receba sinal
+	cont_termino = 0; // Contador de processos terminados (min 0, max 15)
+	ocupado = 0; // Valor de ocupação dos gerentes de processos
 
-	//FILA DE VOLTA
+	//Fila de mensagens direcionadas ao escalonador ("Volta/Subida")
 	key_t msgkey_up = 0x14002713;
 	if((msgqid_up = msgget(msgkey_up, IPC_CREAT | 0x1B6)) < 0){ //permissão: 110 110 110 (RWX)
-		printf("Erro na criação da fila a partir do msgget");
-		exit(1);
-    	}
-
-   	 //FILA DE IDA
+		printf("Erro na criação da fila a partir do msgget"); exit(1);
+    }
+   	//Fila de mensagens que saem do escalonador ("Ida/Descida")
    	key_t msgkey_down = 0x14002712;
 	if((msgqid_down = msgget(msgkey_down, IPC_CREAT | 0x1B6)) < 0){ //permissão: 110 110 110 (RWX)
-		printf("Erro na criação da fila a partir do msgget");
-		exit(1);
+		printf("Erro na criação da fila a partir do msgget"); exit(1);
    	}
 
+   	//Cria nós da fila
 	criarGerentes();
 
-
+	//Estrutura de mensagem simples para receber solicitações
 	struct mensagem msg;
+	//Estrutura de mensagem simples para tratar de jobs finalizados (contém tempos)
 	struct exec finalizado;
+
+	//Tamanho das estruturas acima
 	int msgsize = sizeof(struct mensagem) - sizeof(long);
 	int execsize = sizeof(struct exec) - sizeof(long);
-	while(true){
 
-		if(msgrcv(msgqid_up, &msg, msgsize, -50, IPC_NOWAIT) != -1){
+	while(true){
+		//Recebe mensagens abaixo do valor do RANGE_REQUISICOES (Valores menores que 50), os valores dos cases utilizados 
+		//se encontram no arquivo estrutura.h
+		if(msgrcv(msgqid_up, &msg, msgsize, RANGE_REQUISICOES, IPC_NOWAIT) != -1){
+			//Caso receba a mensagem verifica qual ação deve ser tomada baseada em seu tipo.
 			switch(msg.tipo){
-				case 49:
+				case ADICIONA_JOB:
 					adicionaExecucaoPostergada(msg);
 					break;
-				case 50:
+				case SHUTDOWN:
 					raise(SIGUSR1);
 				break;
 			}	
 		}
-		if(msgrcv(msgqid_up, &finalizado, execsize, 51, IPC_NOWAIT) != -1){
-			cont_termino++;
 
-			if(cont_termino == 15){
+		//Recebe a estrutura de jobs finalizados dos nós ao final da execucao, para realizar as estatisticas.
+		if(msgrcv(msgqid_up, &finalizado, execsize, CONFIRMACAO_EXECUCAO, IPC_NOWAIT) != -1){
+			cont_termino++; //Incremeta o valor de confirmações recebidas para verificar a quantidade de nos
+			if(cont_termino == N_NOS){
+				ocupado = 0; //Caso todos os processos tenham sido encerrados e com a devida confirmacao, libera para outro job
+				cont_termino = 0; 
 				finalizado.tempo_termino = obterHorarioAtual();
-				cont_termino = 0;
-				ocupado = 0;
-				execucoes_terminadas.push_back(finalizado);
 
-				finalizado = execucoes_terminadas.back();
+				execucoes_terminadas.push_back(finalizado); //Adiciona ao vetor de execucoes terminadas.
+				finalizado = execucoes_terminadas.back(); //Imprime as informações do job que acabou de ser finalizado
 				imprimeConcluido(finalizado);	
 			}
 		}
 
+		//Rotina para testar os tempos de delay e comandar a execucao de jobs
 		checaEscalonador();
 	}
 }

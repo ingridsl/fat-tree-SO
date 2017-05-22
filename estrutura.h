@@ -2,6 +2,11 @@
 #define ESTRUTURA_H
 
 #define N 200
+#define RANGE_REQUISICOES -50
+#define ADICIONA_JOB 49
+#define SHUTDOWN 50
+#define CONFIRMACAO_EXECUCAO 51
+#define N_NOS 15
 
 /**/
 struct mensagem {
