@@ -16,6 +16,9 @@ int msgqid_up, msgqid_down;
 /** */
 int estado;
 
+/**/
+struct exec msg, msgfilho;
+
 /** 
 * @param 
 * @return 
