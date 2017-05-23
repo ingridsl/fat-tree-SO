@@ -5,7 +5,6 @@
 
 #include "estrutura.h"
 
-//programa necessário para dar shutdown de forma que não sejam deixados processos abertos
 int main(){
 	key_t msgkey = 0x14002713;
 	int msgqid;

@@ -13,14 +13,13 @@
 
 #include "gerente.h"
 
-//obtem horário atual em segundos
+
 int obterHorarioAtual(){
 	time_t t = time(NULL);
 	struct tm *horario = localtime(&t);
 	return ((horario->tm_hour*60*60 + horario->tm_min*60 + horario->tm_sec) % 86400);
 }
 
-//função de shutdown para os nós da arvore com recepção de sinais de término
 void shutdown(int sig){
 	int status1, status2;
 
@@ -37,7 +36,6 @@ void shutdown(int sig){
 	exit(0); //exit(1);
 }
 
-//funcao principal do gerente.cpp que define a lógica de funcionamento da fat tree quanto ao envio de mensagens e seus tipos
 void trabalha(){
 	int pid_aux;
 	int msgsize = sizeof(struct exec) - sizeof(long);

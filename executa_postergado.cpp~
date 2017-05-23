@@ -11,10 +11,11 @@
 
 #include <unistd.h>
 #include <time.h>
-
+#include "estrutura.h"
 #include "executa_postergado.h"
 
-//checa se a quantidade de parametros recebidos durante a chamada do arquivo compilado está correta
+using namespace std;
+
 void checaQuantidade(int quantidade){
 	if(quantidade != 3){
 		printf("ERRO >> quantidade errada de argumentos\n");
@@ -22,7 +23,6 @@ void checaQuantidade(int quantidade){
 	}
 }
 
-//checa se o argumento fornecido durante a chamada do arquivo compilado é de fato um numero
 void numOk(char * seg){
 	int tam = strlen(seg);
 
@@ -33,7 +33,7 @@ void numOk(char * seg){
 		}
 	}
 }
-//checa se o arquivo fornecido durante a chamada do arquivo compilado é de fato um arquivo existente
+
 void arquivoOK(char * arqExe){
 	if(access(arqExe, F_OK)==-1){
 		printf("ERRO >> Arquivo inexistente\n");
@@ -41,7 +41,6 @@ void arquivoOK(char * arqExe){
 	}
 }
 
-//encontra o valor do ultimo job usado para definir qual o numero do proximo job
 int encontraUltimoJob(){
 	struct job msgjobrcv;
 	struct job msgjobsnd;
@@ -66,7 +65,6 @@ int encontraUltimoJob(){
 }
 
 
-//logica de execução postergada de programa de nome arq_executavel de acordo com uma quantidade de segundos definida por seg
 void executaPostergado(int seg, char arq_executavel[N]){
 	struct mensagem msg;
 	
@@ -91,7 +89,7 @@ void executaPostergado(int seg, char arq_executavel[N]){
 	//enviar o novo job inserido pelo usuário para tratamento
 	int msgsize = sizeof(struct mensagem) - sizeof(long);
 	printf("\nEnviado job = %d, arquivo = %s, delay = %d segundos\n", msg.job, msg.arq, msg.delay);
-   	if(msgsnd(msgqid , &msg, msgsize, 0) < 0){
+    if(msgsnd(msgqid , &msg, msgsize, 0) < 0){
 		printf("Problema ao enviar as info do novo job\n");
 	}
 }
