@@ -14,13 +14,6 @@
 #include "gerente.h"
 
 
-std::string obterNomeArq(char *arq){
-	std::string nome_arq(arq);
-	std::size_t pos = nome_arq.find_last_of("/");
-	if(pos != std::string::npos) nome_arq = nome_arq.substr(pos+1);
-	return nome_arq;
-}
-
 int obterHorarioAtual(){
 	time_t t = time(NULL);
 	struct tm *horario = localtime(&t);
@@ -71,8 +64,7 @@ void trabalha(){
 					pid_aux = fork();
 					if(pid_aux < 0 ){ printf("Erro na criação de processo a partir do Fork()\n"); exit(1); }
 					if(pid_aux == 0){
-						const char* nome_arq = obterNomeArq(msg.arq).c_str();
-						execl(msg.arq, nome_arq, (char*) NULL); //Execucao de processo filho do gerente
+						execl(msg.arq, msg.arq, (char*) NULL); //Execucao de processo filho do gerente
 					}else{ //Gerente entra em modo espera até o termino da execucao do arquivo
 						wait(&wait_status);
 
@@ -111,8 +103,7 @@ void trabalha(){
 				pid_aux = fork();
 				if(pid_aux < 0 ){ printf("Erro na criação de processo a partir do Fork()\n"); exit(1); }
 				if(pid_aux == 0){
-					const char* nome_arq = obterNomeArq(msg.arq).c_str();
-					execl(msg.arq, nome_arq, (char*) NULL); //Executa arquivo
+					execl(msg.arq, msg.arq, (char*) NULL); //Executa arquivo
 				}else{
 					wait(&wait_status); //Gerente espera o fim do programa executado
 					estado = LIVRE; 

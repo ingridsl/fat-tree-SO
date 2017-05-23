@@ -23,12 +23,6 @@ struct exec msg, msgfilho;
 * @param 
 * @return 
 */
-std::string obterNomeArq(char *arq);
-
-/** 
-* @param 
-* @return 
-*/
 int obterHorarioAtual();
 
 /** 
