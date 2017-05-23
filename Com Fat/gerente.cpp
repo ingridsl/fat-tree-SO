@@ -187,7 +187,7 @@ int main (int argc, char *argv[]){
    	}
 
 	//Fila de mensagens que saem do escalonador ("Ida/Descida")
-	key_t msgkey_down = 0x14002712;
+	key_t msgkey_down = 0x14003093;
 	if((msgqid_down = msgget(msgkey_down, 0x1B6)) < 0){//permissão: 110 110 110 (RWX)
 		printf("Erro na obtencao da fila a partir do msgget");
 		exit(1);

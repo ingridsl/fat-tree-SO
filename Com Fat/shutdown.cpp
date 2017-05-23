@@ -14,7 +14,7 @@ int main(){
 		exit(1);
 	}
 
-	key_t msgkey_job = 0x14002000;
+	key_t msgkey_job = 0x14001920;
 	int msgqidjob;
 	if((msgqidjob = msgget(msgkey_job, 0x1B6)) > 0){ //permissão: 110 110 110 (RWX)
 		msgctl(msgqidjob, IPC_RMID, NULL);

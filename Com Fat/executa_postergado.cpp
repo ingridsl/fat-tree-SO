@@ -71,13 +71,13 @@ void executaPostergado(int seg, char arq_executavel[N]){
 	struct mensagem msg;
 	
 
-	key_t msgkey_job = 0x14002000;
+	key_t msgkey_job = 0x14001920;
 	if((msgqidjob = msgget(msgkey_job, IPC_CREAT | 0x1B6)) < 0){ //permissão: 110 110 110 (RWX)
 		printf("ERRO >> Não foi possível criar fila de tuplas \n");
 		exit(1);
 	}
 
-	msg.tipo = 49;	//Define o tipo
+	msg.tipo = ADICIONA_JOB;//Define o tipo
 	msg.job = encontraUltimoJob(); //Define o identificador unico do job
 	strcpy(msg.arq, arq_executavel);
 	msg.delay = seg;
