@@ -18,23 +18,25 @@
 int obterHorarioAtual(){
 	time_t t = time(NULL);
 	struct tm *horario = localtime(&t);
+	//Obtem o horário em segundos
 	return ((horario->tm_hour*60*60 + horario->tm_min*60 + horario->tm_sec) % 86400);
 }
 
 void adicionaExecucaoPostergada(struct mensagem recebido){
 	int horario_atual = obterHorarioAtual();
 	struct exec novo;
-	novo.tipo = 1;
+
+	//Constroi a mensagem na estrutura exec de forma a comporta os tempos de inicio, solicitacao, e futuramente termino
+	novo.tipo = ID_1; //Sempre irá enviar para o filho direto na árvore
 	novo.job = recebido.job;
 	strcpy(novo.arq,recebido.arq);
-
 	novo.tempo = horario_atual + recebido.delay;
 	novo.tempo_solicitacao = horario_atual;
 	novo.tempo_termino = 0;
 	novo.tempo_inicio = 0;
 
-	//printf("\n\n%d, %s, %d\n", (int)novo.job, novo.arq, novo.tempo);
-
+	//Adiciona esse novo job com tais informações de execucao na fila de pendencias, de forma, ao se completar o delay
+	//ele seja executado
 	execucoes_pendentes.push_back(novo);	
 }
 
@@ -43,17 +45,18 @@ void checaEscalonador(){
 
 	if(!execucoes_pendentes.empty()){
 		std::vector<struct exec>::iterator it = execucoes_pendentes.begin();
+		//Verifica o vetor de execucoes pendentes 
 		for( ; it != execucoes_pendentes.end(); ){
-
+			//Caso haja algum job que tem seu horário de execucao programa disponivel realiza as seguintes operacoes
 			if(it->tempo <= horarioAtual && ocupado != 1){
 				ocupado = 1;
 				struct exec aux = execucoes_pendentes[std::distance(execucoes_pendentes.begin(), it)];
-				execucoes_pendentes.erase(it);
-				int msgsize = sizeof(struct exec) - sizeof(long);
+				execucoes_pendentes.erase(it); //Retira ele do vetor de pendencias
 
-				//printf("\n %d, %s, %d", (int)aux.tipo, aux.arq, aux.tempo);
+				//Salva a informacao do inicio da execucao na estrutura da mensagem
+				int msgsize = sizeof(struct exec) - sizeof(long);
 				aux.tempo_inicio = obterHorarioAtual();
-				msgsnd(msgqid_down, &aux, msgsize ,0); //manda para filho
+				msgsnd(msgqid_down, &aux, msgsize ,0); //Envia a estrutura com o job para o primeiro filho 1
 			} else {
 				it++;
 			}
@@ -65,137 +68,125 @@ void criarGerentes(){
 	int pid_filho_aux[2];
 	char parametro1[10];
 	char parametro2[10];
-	char parametronivel[5];
+	char identificador[5];
 
-	if((pid_filho = fork()) < 0 ){ /*GERENTE 1 NIVEL 1*/
-		printf("Erro na criação de árvore a partir do Fork()\n"); exit(1); }
-	if(pid_filho == 0){ 
+	//Criação da árvore manual, de forma que os filhos de cada nó na árvore lógica, sejam filhos também dos processos
+	//Cada nós irá receber um identificador com seus respectivos números na árvore
+	//Todos os nós exceto os nós do último nível (os que não possuem filhos) possuem o PID de seus filhos
+	//Os sprintf a seguir são utilizados para transformar valores inteiros em strings de forma a servirem de parametros
 
-		if((pid_filho_aux[0] = fork()) < 0 ){ 
-			printf("Erro na criação de árvore a partir do Fork()\n"); exit(1); }
-		if(pid_filho_aux[0] == 0){ /* GERENTE 1 NIVEL 2*/
-			if((pid_filho_aux[0] = fork()) < 0){ 
-				printf("Erro na criação de árvore a partir do Fork()\n"); exit(1); }
+	if((pid_filho = fork()) < 0 ){ printf("Erro na criação de árvore Nó 1\n"); exit(1); }
+	if(pid_filho == 0){ //Cria o primeiro nó da árvore
 
-			if(pid_filho_aux[0] == 0){ /* GERENTE 1 NIVEL 3*/
+		if((pid_filho_aux[0] = fork()) < 0 ){ printf("Erro na criação de árvore Nó 2\n"); exit(1); }
+		if(pid_filho_aux[0] == 0){ //Cria a primeira ramificação do nó 1 dito por nó 2 (Caminho 1->2)
 
-				if((pid_filho_aux[0] = fork()) < 0){ 
-					printf("Erro na criação de árvore a partir do Fork()\n"); exit(1); }
-				if(pid_filho_aux[0] == 0){ /* GERENTE 1 NIVEL 4*/
-					sprintf (parametronivel, "%d", 8);
-					execl("gerente", "gerente", parametronivel,  (char*) NULL);
+			if((pid_filho_aux[0] = fork()) < 0){ printf("Erro na criação de árvore Nó 4\n"); exit(1); }
+			if(pid_filho_aux[0] == 0){ //Cria ramificação inerente ao nó 2, para o nó 4 (1->2->4)
+
+				if((pid_filho_aux[0] = fork()) < 0){ printf("Erro na criação de árvore Nó 8\n"); exit(1); }
+				if(pid_filho_aux[0] == 0){ //Cria ramificação inerente ao nó 4, para o nó 8 (1->2->4->8)
+					sprintf (identificador, "%d", ID_8);
+					execl("gerente", "gerente", identificador,  (char*) NULL);
 				}
-				if((pid_filho_aux[1] = fork()) < 0){ 
-					printf("Erro na criação de árvore a partir do Fork()\n"); exit(1); }
-				if(pid_filho_aux[1] == 0){ /* GERENTE 2 NIVEL 4*/
-					sprintf (parametronivel, "%d", 9);
-					execl("gerente", "gerente", parametronivel, (char*) NULL);
+				if((pid_filho_aux[1] = fork()) < 0){ printf("Erro na criação de árvore nó 9\n"); exit(1); }
+				if(pid_filho_aux[1] == 0){ //Cria ramificação inerente ao nó 4, para o nó 9 (1->2->4->9)
+					sprintf (identificador, "%d", ID_9);
+					execl("gerente", "gerente", identificador, (char*) NULL);
 				}
 
-				//GERENTE 1-3
-				sprintf (parametronivel, "%d", 4);
-				sprintf (parametro1, "%d", pid_filho_aux[0]);
-				sprintf (parametro2, "%d", pid_filho_aux[1]);
-				execl("gerente", "gerente", parametronivel, parametro1, parametro2, (char*) NULL);
-			}
-			if((pid_filho_aux[1] = fork()) < 0){ 
-				printf("Erro na criação de árvore a partir do Fork()\n"); exit(1); }
-
-			if(pid_filho_aux[1] == 0){ /* GERENTE 2 NIVEL 3*/
-
-				if((pid_filho_aux[0] = fork()) < 0){ 
-					printf("Erro na criação de árvore a partir do Fork()\n"); exit(1); }
-				if(pid_filho_aux[0] == 0){ /* GERENTE 3 NIVEL 4*/
-					sprintf (parametronivel, "%d", 10);
-					execl("gerente", "gerente", parametronivel, (char*) NULL);
-				}
-				if((pid_filho_aux[1] = fork()) < 0){ 
-					printf("Erro na criação de árvore a partir do Fork()\n"); exit(1); }
-				if(pid_filho_aux[1] == 0){ /* GERENTE 4 NIVEL 4*/	
-					sprintf (parametronivel, "%d", 11);
-					execl("gerente", "gerente", parametronivel, (char*) NULL);
-				}
-				//GERENTE 2-3
-				sprintf (parametronivel, "%d", 5);
-				sprintf (parametro1, "%d", pid_filho_aux[0]);
-				sprintf (parametro2, "%d", pid_filho_aux[1]);
-				execl("gerente", "gerente", parametronivel, parametro1, parametro2, (char*) NULL);			
+				//Após criar seus filhos, executa nó 4
+				sprintf (identificador, "%d", ID_4);
+				sprintf (parametro1, "%d", pid_filho_aux[0]); sprintf (parametro2, "%d", pid_filho_aux[1]);
+				execl("gerente", "gerente", identificador, parametro1, parametro2, (char*) NULL);
 			}
 
-			//Gerente 1-2
-			sprintf (parametronivel, "%d", 2);
-			sprintf (parametro1, "%d", pid_filho_aux[0]);
-			sprintf (parametro2, "%d", pid_filho_aux[1]);
-			execl("gerente", "gerente", parametronivel, parametro1, parametro2, (char*) NULL);
-		}
-		if((pid_filho_aux[1] = fork()) < 0 ){
-			printf("Erro na criação de árvore a partir do Fork()\n"); exit(1); }
-		if(pid_filho_aux[1] == 0){ /* GERENTE 2 NIVEL 2*/
-			if((pid_filho_aux[0] = fork()) < 0){ /* GERENTE 3 NIVEL 3*/
-				printf("Erro na criação de árvore a partir do Fork()\n"); exit(1); }
+			if((pid_filho_aux[1] = fork()) < 0){ printf("Erro na criação de árvore nó 5\n"); exit(1); }
+			if(pid_filho_aux[1] == 0){ //Cria ramificação inerente ao nó 2, para o nó 5 (1->2->5)
 
-			if(pid_filho_aux[0] == 0){
-
-				if((pid_filho_aux[0] = fork()) < 0){ 
-					printf("Erro na criação de árvore a partir do Fork()\n"); exit(1); }
-				if(pid_filho_aux[0] == 0){ /* GERENTE 5 NIVEL 4*/
-					sprintf (parametronivel, "%d", 12);
-					execl("gerente", "gerente", parametronivel, (char*) NULL);
+				if((pid_filho_aux[0] = fork()) < 0){ printf("Erro na criação de árvore nó 10\n"); exit(1); }
+				if(pid_filho_aux[0] == 0){ //Cria ramificação inerente ao nó 5, para o nó 10 (1->2->5->10)
+					sprintf (identificador, "%d", ID_10);
+					execl("gerente", "gerente", identificador, (char*) NULL);
 				}
-				if((pid_filho_aux[1] = fork()) < 0){ 
-					printf("Erro na criação de árvore a partir do Fork()\n"); exit(1); }
-				if(pid_filho_aux[1] == 0){ /* GERENTE 6 NIVEL 4*/
-					sprintf (parametronivel, "%d", 13);
-					execl("gerente", "gerente", parametronivel, (char*) NULL);
+				if((pid_filho_aux[1] = fork()) < 0){ printf("Erro na criação de árvore nó 11\n"); exit(1); }
+				if(pid_filho_aux[1] == 0){ //Cria ramificação inerente ao nó 5, para o nó 11 (1->2->5->11)
+					sprintf (identificador, "%d", ID_11);
+					execl("gerente", "gerente", identificador, (char*) NULL);
 				}
-
-				//GERENTE 3-3
-				sprintf (parametronivel, "%d", 6);
-				sprintf (parametro1, "%d", pid_filho_aux[0]);
-				sprintf (parametro2, "%d", pid_filho_aux[1]);
-				execl("gerente", "gerente", parametronivel, parametro1, parametro2, (char*) NULL);
-			}
-
-			if((pid_filho_aux[1] = fork()) < 0){ /* GERENTE 4 NIVEL 3*/
-				printf("Erro na criação de árvore a partir do Fork()\n"); exit(1); }
-
-			if(pid_filho_aux[1] == 0){
 				
-				if((pid_filho_aux[0] = fork()) < 0){ 
-					printf("Erro na criação de árvore a partir do Fork()\n"); exit(1); }
-				if(pid_filho_aux[0] == 0){ /* GERENTE 7 NIVEL 4*/
-					sprintf (parametronivel, "%d", 14);
-					execl("gerente", "gerente", parametronivel, (char*) NULL);
-				}
-				if((pid_filho_aux[1] = fork()) < 0){ 
-					printf("Erro na criação de árvore a partir do Fork()\n"); exit(1); }
-				if(pid_filho_aux[1] == 0){ /* GERENTE 8 NIVEL 4*/
-					sprintf (parametronivel, "%d", 15);
-					execl("gerente", "gerente", parametronivel, (char*) NULL);
-				}
-				//GERENTE 4-3
-
-				sprintf (parametronivel, "%d", 7);
-				sprintf (parametro1, "%d", pid_filho_aux[0]);
-				sprintf (parametro2, "%d", pid_filho_aux[1]);
-				execl("gerente", "gerente", parametronivel, parametro1, parametro2, (char*) NULL);
+				//Após criar seus filhos, executa nó 5
+				sprintf (identificador, "%d", ID_5);
+				sprintf (parametro1, "%d", pid_filho_aux[0]); sprintf (parametro2, "%d", pid_filho_aux[1]);
+				execl("gerente", "gerente", identificador, parametro1, parametro2, (char*) NULL);			
 			}
 
-			//Gerente 2-2
-			sprintf (parametronivel, "%d", 3);
-			sprintf (parametro1, "%d", pid_filho_aux[0]);
-			sprintf (parametro2, "%d", pid_filho_aux[1]);
-			execl("gerente", "gerente", parametronivel, parametro1, parametro2, (char*) NULL);
+			//Após criar seus filhos, executa nó 2
+			sprintf (identificador, "%d", ID_2);
+			sprintf (parametro1, "%d", pid_filho_aux[0]); sprintf (parametro2, "%d", pid_filho_aux[1]);
+			execl("gerente", "gerente", identificador, parametro1, parametro2, (char*) NULL);
 		}
 
-		sprintf (parametronivel, "%d", 1);
-		sprintf (parametro1, "%d", pid_filho_aux[0]);
-		sprintf (parametro2, "%d", pid_filho_aux[1]);
-		execl("gerente", "gerente", parametronivel, parametro1, parametro2, (char*) NULL);
+
+
+		if((pid_filho_aux[1] = fork()) < 0 ){printf("Erro na criação de árvore nó 3\n"); exit(1); }
+		if(pid_filho_aux[1] == 0){ //Cria a segunda ramificação do nó 1 dito por nó 3 (Caminho 1->3)
+
+			if((pid_filho_aux[0] = fork()) < 0){ printf("Erro na criação de árvore nó 6\n"); exit(1); }
+			if(pid_filho_aux[0] == 0){ //Cria ramificação inerente ao nó 3, para o nó 6 (1->3->6)
+				if((pid_filho_aux[0] = fork()) < 0){ printf("Erro na criação de árvore nó 12\n"); exit(1); }
+				if(pid_filho_aux[0] == 0){ //Cria ramificação inerente ao nó 6 para o nó 12 (1->3->6->12)
+					sprintf (identificador, "%d", ID_12);
+					execl("gerente", "gerente", identificador, (char*) NULL);
+				}
+				if((pid_filho_aux[1] = fork()) < 0){ printf("Erro na criação de árvore nó 13\n"); exit(1); }
+				if(pid_filho_aux[1] == 0){ //Cria ramificação inerente ao nó 6, para o nó 13 (1->3->6->13)
+					sprintf (identificador, "%d", ID_13);
+					execl("gerente", "gerente", identificador, (char*) NULL);
+				}
+
+				//Após criar seus filhos, executa nó 6
+				sprintf (identificador, "%d", ID_6);
+				sprintf (parametro1, "%d", pid_filho_aux[0]); sprintf (parametro2, "%d", pid_filho_aux[1]);
+				execl("gerente", "gerente", identificador, parametro1, parametro2, (char*) NULL);
+			}
+
+			if((pid_filho_aux[1] = fork()) < 0){ printf("Erro na criação de árvore nó 7\n"); exit(1); }
+			if(pid_filho_aux[1] == 0){ //Cria ramificação inerente ao nó 3, para o nó 7 (1->3->7)
+				if((pid_filho_aux[0] = fork()) < 0){ printf("Erro na criação de árvore nó 14\n"); exit(1); }
+				if(pid_filho_aux[0] == 0){ //Cria ramificação inerente ao nó 7, para o nó 14 (1->3->7->14)
+					sprintf (identificador, "%d", ID_14);
+					execl("gerente", "gerente", identificador, (char*) NULL);
+				}
+				if((pid_filho_aux[1] = fork()) < 0){ printf("Erro na criação de árvore nó 15\n"); exit(1); }
+				if(pid_filho_aux[1] == 0){ //Cria ramificação inerente ao nó 7, para o nó 15 (1->3->7->15)
+					sprintf (identificador, "%d", ID_15);
+					execl("gerente", "gerente", identificador, (char*) NULL);
+				}
+
+				//Após criar seus filhos, executa nó 7
+				sprintf (identificador, "%d", ID_7);
+				sprintf (parametro1, "%d", pid_filho_aux[0]); sprintf (parametro2, "%d", pid_filho_aux[1]);
+				execl("gerente", "gerente", identificador, parametro1, parametro2, (char*) NULL);
+			}
+
+			//Após criar seus filhos, executa nó 3
+			sprintf (identificador, "%d", ID_3);
+			sprintf (parametro1, "%d", pid_filho_aux[0]); sprintf (parametro2, "%d", pid_filho_aux[1]);
+			execl("gerente", "gerente", identificador, parametro1, parametro2, (char*) NULL);
+		}
+
+		//Após criar seus filhos, executa nó 1
+		sprintf (identificador, "%d", ID_1);
+		sprintf (parametro1, "%d", pid_filho_aux[0]); sprintf (parametro2, "%d", pid_filho_aux[1]);
+		execl("gerente", "gerente", identificador, parametro1, parametro2, (char*) NULL);
 	}
 }
 
 void imprimeConcluido(struct exec finalizado){
+
+	//Realiza conversão do valor absoluto de segundos do tempo nas estruturas para Horas, Minutos e segundos
+	//De forma a facilitar a visualização pós impressão
 	int hora_ini = (finalizado.tempo_inicio / (60*60));
 	int minuto_ini = ((finalizado.tempo_inicio - (hora_ini*60*60))/60);
 	int segundo_ini = (finalizado.tempo_inicio - hora_ini*60*60 - minuto_ini*60);
@@ -211,6 +202,7 @@ void imprimeConcluido(struct exec finalizado){
 void imprimeRestante(){
 	if(!execucoes_pendentes.empty()){
 		printf("\nExecucoes que ficaram pendentes:\n");
+		//Percorre vetor de execucoes pendentes para imprimir os jobs que estavam esperando para serem executados
 		for(std::vector<int>::size_type i = 0; i != execucoes_pendentes.size(); i++) {
    			printf("Job: %d, arquivo %s, delay %d\n", (int) execucoes_pendentes[i].job,
    			 execucoes_pendentes[i].arq, execucoes_pendentes[i].tempo - execucoes_pendentes[i].tempo_solicitacao );
@@ -220,9 +212,9 @@ void imprimeRestante(){
 }
 
 void imprimeExecutados(){
-
 	if(!execucoes_terminadas.empty()){
 		printf("\nExecucoes com exito:");
+		//Percorre vetor de execucoes terminadas para imprimir as estatísticas corretamente de cada job finalizado
 		for(std::vector<int>::size_type i = 0; i != execucoes_terminadas.size(); i++) {
    			imprimeConcluido(execucoes_terminadas[i]);
 		}
@@ -233,15 +225,16 @@ void imprimeExecutados(){
 
 void shutdown(int sig){
 	printf("\nServidor desligando...\n");
-	kill(pid_filho, SIGUSR1);
+	kill(pid_filho, SIGUSR1); //Envia sinais para o Filho direto do escalonador (primeiro nó identificador 1)
 	
 	int status;
-	wait(&status);
+	wait(&status); //Espera o exit do primeiro nó
 
-	imprimeRestante();
-	imprimeExecutados();
+	imprimeRestante(); //Imprime os jobs que não foram executados
+	imprimeExecutados(); //Imprime os jobs que foram executados com as devidas estatísticas
 
-	msgctl(msgqid_up, IPC_RMID, NULL);
+	//Exclui ambas filas utilizadas no escalonador multi processos
+	msgctl(msgqid_up, IPC_RMID, NULL); 
 	msgctl(msgqid_down, IPC_RMID, NULL);
 	exit(0); //exit(1);
 }
