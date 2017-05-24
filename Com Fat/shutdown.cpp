@@ -27,5 +27,5 @@ int main(){
     		printf("Erro ao executar msgsnd: ");
     		exit(1);
     	}
-	return 0; //exit(0);
+	return 0;
 }

@@ -236,7 +236,7 @@ void shutdown(int sig){
 	//Exclui ambas filas utilizadas no escalonador multi processos
 	msgctl(msgqid_up, IPC_RMID, NULL); 
 	msgctl(msgqid_down, IPC_RMID, NULL);
-	exit(0); //exit(1);
+	exit(0);
 }
 
 

@@ -34,7 +34,7 @@ void shutdown(int sig){
 		wait(&status2);
 	}
 
-	exit(0); //exit(1);
+	exit(0);
 }
 
 //funcao principal do gerente.cpp que define a lógica de funcionamento da fat tree quanto ao envio de mensagens e seus tipos
