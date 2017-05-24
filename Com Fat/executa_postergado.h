@@ -35,7 +35,7 @@ void arquivoOK(char * arqExe);
 
 /** Recebe via mensagem o identificador do último job do escalonador
 * @param void  
-* @return void
+* @return valor inteiro do último job encontrado
 */
 int encontraUltimoJob();
 

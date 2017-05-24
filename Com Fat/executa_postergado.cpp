@@ -33,6 +33,7 @@ void numOk(char * seg){
 		}
 	}
 }
+
 //checa se o arquivo fornecido durante a chamada do arquivo compilado é de fato um arquivo existente
 void arquivoOK(char * arqExe){
 	if(access(arqExe, F_OK)==-1){
@@ -69,7 +70,6 @@ int encontraUltimoJob(){
 //logica de execução postergada de programa de nome arq_executavel de acordo com uma quantidade de segundos definida por seg
 void executaPostergado(int seg, char arq_executavel[N]){
 	struct mensagem msg;
-	
 
 	key_t msgkey_job = 0x14001920;
 	if((msgqidjob = msgget(msgkey_job, IPC_CREAT | 0x1B6)) < 0){ //permissão: 110 110 110 (RWX)
